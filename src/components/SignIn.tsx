@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 
 export function SignIn() {
-  const { configured, signIn } = useAuth()
+  const { configured, denied, signIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -34,13 +34,14 @@ export function SignIn() {
       <p className="eyebrow">行程電腦</p>
       <h2>用 Google 打開帳本</h2>
       <p className="lede">
-        登入後，購置、固定支出和充電紀錄會跟著這支 Google 帳號走。換手機只要再登入一次。
+        只有白名單裡的 Google 帳號能打開帳本。登入後，手機和電腦看到的是同一本帳。
       </p>
       <div className="actions">
         <button type="button" className="btn primary" onClick={() => void handleSignIn()} disabled={busy}>
           {busy ? '正在登入…' : '使用 Google 登入'}
         </button>
       </div>
+      {denied ? <p className="alert">這個 Google 帳號不在白名單。若要使用，把信箱告訴我再加進去。</p> : null}
       {error ? <p className="alert">{error}</p> : null}
     </section>
   )

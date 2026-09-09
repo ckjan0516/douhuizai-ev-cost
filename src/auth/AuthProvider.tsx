@@ -7,12 +7,14 @@ import {
   type User,
 } from 'firebase/auth'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { isAllowedEmail } from '../lib/allowlist'
 import { auth, isFirebaseConfigured } from '../lib/firebase'
 
 interface AuthState {
   user: User | null
   ready: boolean
   configured: boolean
+  denied: boolean
   signIn: () => Promise<void>
   signOutUser: () => Promise<void>
 }
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [ready, setReady] = useState(false)
+  const [denied, setDenied] = useState(false)
 
   useEffect(() => {
     if (!auth) {
@@ -29,6 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     return onAuthStateChanged(auth, (next) => {
+      if (next && !isAllowedEmail(next.email)) {
+        setDenied(true)
+        setUser(null)
+        void signOut(auth)
+        setReady(true)
+        return
+      }
+      if (next) setDenied(false)
       setUser(next)
       setReady(true)
     })
@@ -56,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         ready,
         configured: isFirebaseConfigured(),
+        denied,
         signIn,
         signOutUser,
       }}

@@ -1,8 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAllowlisted() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() in ['therealck50@gmail.com'];
+    }
+
     match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if isAllowlisted() && request.auth.uid == uid;
     }
   }
 }
