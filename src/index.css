@@ -362,6 +362,11 @@ a {
   font-family: var(--mono);
 }
 
+.other-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .form-grid {
   display: grid;
   gap: 14px;

@@ -1,17 +1,17 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { SignIn } from './SignIn'
 
 const links = [
   { to: '/', label: '總覽', end: true },
-  { to: '/purchase', label: '購置' },
-  { to: '/fixed', label: '固定' },
   { to: '/charges', label: '充電' },
-  { to: '/backup', label: '備份' },
+  { to: '/other', label: '其他', match: ['/other', '/fixed', '/backup'] },
+  { to: '/purchase', label: '購置' },
 ]
 
 export function Layout() {
   const { user, ready, signOutUser } = useAuth()
+  const location = useLocation()
 
   return (
     <div className="shell">
@@ -45,7 +45,10 @@ export function Layout() {
                 key={link.to}
                 to={link.to}
                 end={link.end}
-                className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}
+                className={({ isActive }) => {
+                  const grouped = link.match?.includes(location.pathname) ?? false
+                  return isActive || grouped ? 'nav-link is-active' : 'nav-link'
+                }}
               >
                 {link.label}
               </NavLink>
