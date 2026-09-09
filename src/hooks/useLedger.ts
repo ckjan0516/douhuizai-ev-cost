@@ -1,63 +1,108 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
 import {
-  deleteCharge,
-  deleteExpense,
-  ensureVehicle,
-  listCharges,
-  listExpenses,
-  saveCharge,
-  saveExpense,
-  saveVehicle,
-} from '../db'
+  deleteChargeCloud,
+  deleteExpenseCloud,
+  ensureCloudVehicle,
+  listChargesCloud,
+  listExpensesCloud,
+  saveChargeCloud,
+  saveExpenseCloud,
+  saveVehicleCloud,
+} from '../lib/cloud'
+import { migrateLocalIfNeeded } from '../lib/migrate'
 import type { ChargeSession, FixedExpense, Vehicle } from '../types'
 
 export function useLedger() {
+  const { user } = useAuth()
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [expenses, setExpenses] = useState<FixedExpense[]>([])
   const [charges, setCharges] = useState<ChargeSession[]>([])
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [migrated, setMigrated] = useState(false)
 
   const refresh = useCallback(async () => {
-    const nextVehicle = await ensureVehicle()
-    const nextExpenses = await listExpenses()
-    const nextCharges = await listCharges()
+    if (!user) {
+      setVehicle(null)
+      setExpenses([])
+      setCharges([])
+      setReady(false)
+      return
+    }
+    const nextVehicle = await ensureCloudVehicle(user.uid)
+    const nextExpenses = await listExpensesCloud(user.uid)
+    const nextCharges = await listChargesCloud(user.uid)
     setVehicle(nextVehicle)
     setExpenses(nextExpenses)
     setCharges(nextCharges)
     setReady(true)
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    refresh().catch((err: unknown) => {
-      setError(err instanceof Error ? err.message : '讀取帳本失敗')
-    })
-  }, [refresh])
+    if (!user) {
+      setReady(false)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const didMigrate = await migrateLocalIfNeeded(user.uid)
+        if (!cancelled && didMigrate) setMigrated(true)
+        await refresh()
+      } catch (err: unknown) {
+        if (!cancelled) setError(err instanceof Error ? err.message : '讀取帳本失敗')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user, refresh])
 
-  const updateVehicle = useCallback(async (next: Vehicle) => {
-    await saveVehicle(next)
-    setVehicle(next)
-  }, [])
+  const updateVehicle = useCallback(
+    async (next: Vehicle) => {
+      if (!user) return
+      await saveVehicleCloud(user.uid, next)
+      setVehicle(next)
+    },
+    [user],
+  )
 
-  const upsertExpense = useCallback(async (expense: FixedExpense) => {
-    await saveExpense(expense)
-    await refresh()
-  }, [refresh])
+  const upsertExpense = useCallback(
+    async (expense: FixedExpense) => {
+      if (!user) return
+      await saveExpenseCloud(user.uid, expense)
+      await refresh()
+    },
+    [user, refresh],
+  )
 
-  const removeExpense = useCallback(async (id: string) => {
-    await deleteExpense(id)
-    await refresh()
-  }, [refresh])
+  const removeExpense = useCallback(
+    async (id: string) => {
+      if (!user) return
+      await deleteExpenseCloud(user.uid, id)
+      await refresh()
+    },
+    [user, refresh],
+  )
 
-  const upsertCharge = useCallback(async (charge: ChargeSession) => {
-    await saveCharge(charge)
-    await refresh()
-  }, [refresh])
+  const upsertCharge = useCallback(
+    async (charge: ChargeSession) => {
+      if (!user) return
+      await saveChargeCloud(user.uid, charge)
+      await refresh()
+    },
+    [user, refresh],
+  )
 
-  const removeCharge = useCallback(async (id: string) => {
-    await deleteCharge(id)
-    await refresh()
-  }, [refresh])
+  const removeCharge = useCallback(
+    async (id: string) => {
+      if (!user) return
+      await deleteChargeCloud(user.uid, id)
+      await refresh()
+    },
+    [user, refresh],
+  )
 
   return {
     vehicle,
@@ -65,6 +110,7 @@ export function useLedger() {
     charges,
     ready,
     error,
+    migrated,
     refresh,
     updateVehicle,
     upsertExpense,

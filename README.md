@@ -1,8 +1,10 @@
 # 豆灰仔 · 電動車持有成本
 
-本機帳本：記錄購置成本、每月固定支出與充電，算出每月花費與每公里成本。充電單可拍照或選圖，瀏覽器辨識後再確認入帳。
+記錄購置成本、每月固定支出與充電，算出每月花費與每公里成本。充電單可拍照或選圖，瀏覽器辨識後再確認入帳。
 
-花費資料存在你開啟這個網站的瀏覽器（IndexedDB），不會上傳到伺服器。
+登入 Google 後，帳本存在你的雲端帳號，手機和電腦看到的是同一本。
+
+線上使用：https://ckjan0516.github.io/douhuizai-ev-cost/
 
 ## 本機開發
 
@@ -10,10 +12,11 @@
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-瀏覽器開終端機顯示的本機網址。localhost 可以用相機／選圖測試掃描。
+`.env` 填入 Firebase 網頁設定。localhost 可以用相機／選圖測試掃描。
 
 ## 成本怎麼算
 
@@ -25,29 +28,12 @@ npm run dev
 
 家充若只填度數，會用「家充電價」帶出金額。沒有里程時，總覽仍顯示花費，每公里會標「尚缺里程」。
 
-## 備份到雲端硬碟
+## 備份
 
-1. 打開「備份」
-2. 下載 JSON
-3. 把檔案存進這份專案所在的雲端硬碟資料夾
+日常換裝置：用同一支 Google 帳號登入即可。
 
-換手機或清瀏覽器後，用同一份 JSON 匯入。匯入會覆寫該瀏覽器目前的帳。
+「備份」頁的 JSON 是額外副本。匯入會覆寫這支 Google 帳號的雲端資料。
 
-## 部署到網路上
+## 部署
 
-這是靜態網站，請部署到有 HTTPS 的空間，手機才能在充電站掃描充電單。不要用雲端硬碟預覽當網站。
-
-### GitHub Pages
-
-1. 把這個資料夾建成 GitHub repo（可先 private）
-2. Repo Settings → Pages → Source 選 GitHub Actions
-3. 已附 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)，推到 `main` 就會部署
-4. 網站網址形如 `https://<帳號>.github.io/<repo>/`
-
-### Cloudflare Pages
-
-1. 連接同一個 GitHub repo
-2. Build command：`npm run build`
-3. Output directory：`dist`
-
-上線後請用同一個網址紀錄帳本。不同網址的瀏覽器資料是分開的。
+推到 `main` 後，GitHub Actions 會發布到 GitHub Pages。Firebase 設定值放在 repo 的 Actions secrets，變數名稱與 `.env.example` 相同。

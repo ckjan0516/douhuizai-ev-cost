@@ -71,6 +71,24 @@ export async function deleteCharge(id: string): Promise<void> {
   await db.charges.delete(id)
 }
 
+export async function peekLocalLedger(): Promise<{
+  vehicle: Vehicle | undefined
+  expenses: FixedExpense[]
+  charges: ChargeSession[]
+  meaningful: boolean
+}> {
+  const vehicle = await db.vehicle.get(VEHICLE_ID)
+  const expenses = await db.expenses.toArray()
+  const charges = await db.charges.toArray()
+  const meaningful = Boolean(
+    vehicle?.model ||
+      vehicle?.purchaseItems.some((item) => item.amount > 0) ||
+      expenses.length ||
+      charges.length,
+  )
+  return { vehicle, expenses, charges, meaningful }
+}
+
 export async function replaceAll(data: {
   vehicle: Vehicle
   expenses: FixedExpense[]

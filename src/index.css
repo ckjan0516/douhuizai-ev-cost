@@ -77,7 +77,42 @@ a {
 }
 
 .topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   padding-left: 18px;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.account-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.gate {
+  max-width: 420px;
+  padding-top: 24px;
+}
+
+.gate h2 {
+  font-size: clamp(32px, 7vw, 44px);
 }
 
 .eyebrow {

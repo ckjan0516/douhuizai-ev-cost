@@ -62,6 +62,8 @@ export interface ChargeSession {
   odometerKm?: number
   source: ChargeSource
   photoBlob?: Blob
+  photoPath?: string
+  photoUrl?: string
   ocrRawText?: string
   createdAt: string
 }

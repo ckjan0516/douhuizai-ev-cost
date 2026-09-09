@@ -1,4 +1,4 @@
-import { replaceAll } from '../db'
+import { replaceAllCloud } from './cloud'
 import type { ChargeSession, FixedExpense, Vehicle } from '../types'
 
 const BACKUP_VERSION = 1
@@ -42,7 +42,7 @@ export async function exportLedger(
   URL.revokeObjectURL(url)
 }
 
-export async function importLedger(file: File): Promise<void> {
+export async function importLedger(file: File, uid: string): Promise<void> {
   const parsed = JSON.parse(await file.text()) as BackupFile
   if (!parsed?.vehicle || !Array.isArray(parsed.expenses) || !Array.isArray(parsed.charges)) {
     throw new Error('這個檔不是豆灰仔帳本備份')
@@ -56,7 +56,7 @@ export async function importLedger(file: File): Promise<void> {
       }
     }),
   )
-  await replaceAll({
+  await replaceAllCloud(uid, {
     vehicle: parsed.vehicle,
     expenses: parsed.expenses,
     charges,

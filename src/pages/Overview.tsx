@@ -22,7 +22,7 @@ const periods: Array<{ id: PeriodKey; label: string }> = [
 ]
 
 export function OverviewPage() {
-  const { vehicle, expenses, charges, ready, error } = useLedger()
+  const { vehicle, expenses, charges, ready, error, migrated } = useLedger()
   const [period, setPeriod] = useState<PeriodKey>('month')
 
   const summary = useMemo(() => {
@@ -42,6 +42,9 @@ export function OverviewPage() {
 
   return (
     <div className="stack">
+      {migrated ? (
+        <p className="fine">已把這台瀏覽器裡的舊帳本搬到你的 Google 帳號。</p>
+      ) : null}
       <section className="cluster">
         <div className="cluster-head">
           <div>

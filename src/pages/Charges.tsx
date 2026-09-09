@@ -40,6 +40,8 @@ export function ChargesPage() {
     setMode('edit')
     if (charge.photoBlob) {
       setPreview(URL.createObjectURL(charge.photoBlob))
+    } else if (charge.photoUrl) {
+      setPreview(charge.photoUrl)
     } else {
       setPreview(null)
     }
