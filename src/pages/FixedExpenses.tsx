@@ -70,7 +70,7 @@ export function FixedExpensesPage() {
   return (
     <div className="stack">
       <section className="page-lead">
-        <p className="eyebrow">固定支出</p>
+        <p className="eyebrow">其他</p>
         <h2>每個月都會出現的錢</h2>
         <p className="lede">保險、停車、貸款、連線訂閱。年繳會自動折成該月負擔；不想再算就填結束日。</p>
       </section>
