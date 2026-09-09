@@ -1,5 +1,11 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getAuth, type Auth } from 'firebase/auth'
+import {
+  browserLocalPersistence,
+  browserPopupRedirectResolver,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  type Auth,
+} from 'firebase/auth'
 import { initializeFirestore, type Firestore } from 'firebase/firestore'
 
 const config = {
@@ -24,6 +30,9 @@ export let cloudDb: Firestore | null = null
 
 if (isFirebaseConfigured()) {
   app = initializeApp(config)
-  auth = getAuth(app)
+  auth = initializeAuth(app, {
+    persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+    popupRedirectResolver: browserPopupRedirectResolver,
+  })
   cloudDb = initializeFirestore(app, { experimentalForceLongPolling: true })
 }

@@ -34,7 +34,8 @@ export function SignIn() {
       <p className="eyebrow">行程電腦</p>
       <h2>用 Google 打開帳本</h2>
       <p className="lede">
-        只有白名單裡的 Google 帳號能打開帳本。登入後，手機和電腦看到的是同一本帳。
+        只有白名單裡的 Google 帳號能打開帳本。手機請用 Chrome 開啟這個網址，不要從 Line、Facebook
+        或 Instagram 裡面的瀏覽器登入。
       </p>
       <div className="actions">
         <button type="button" className="btn primary" onClick={() => void handleSignIn()} disabled={busy}>
