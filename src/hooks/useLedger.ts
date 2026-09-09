@@ -9,6 +9,7 @@ import {
   saveChargeCloud,
   saveExpenseCloud,
   saveVehicleCloud,
+  explainCloudError,
 } from '../lib/cloud'
 import { migrateLocalIfNeeded } from '../lib/migrate'
 import type { ChargeSession, FixedExpense, Vehicle } from '../types'
@@ -51,7 +52,7 @@ export function useLedger() {
         if (!cancelled && didMigrate) setMigrated(true)
         await refresh()
       } catch (err: unknown) {
-        if (!cancelled) setError(err instanceof Error ? err.message : '讀取帳本失敗')
+        if (!cancelled) setError(explainCloudError(err))
       }
     })()
     return () => {

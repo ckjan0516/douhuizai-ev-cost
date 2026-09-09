@@ -1,6 +1,6 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
-import { getFirestore, type Firestore } from 'firebase/firestore'
+import { initializeFirestore, type Firestore } from 'firebase/firestore'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const config = {
@@ -27,6 +27,6 @@ export let storage: FirebaseStorage | null = null
 if (isFirebaseConfigured()) {
   app = initializeApp(config)
   auth = getAuth(app)
-  cloudDb = getFirestore(app)
+  cloudDb = initializeFirestore(app, { experimentalForceLongPolling: true })
   storage = getStorage(app)
 }
