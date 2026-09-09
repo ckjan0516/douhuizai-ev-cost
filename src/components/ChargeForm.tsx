@@ -142,7 +142,7 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
         </Field>
       </div>
       {draft.photoBlob ? (
-        <p className="fine">已附充電單照片，會一併存下備查。</p>
+        <p className="fine">照片只用來辨識。記入後只留下金額、度數與時間。</p>
       ) : null}
       {draft.ocrRawText ? (
         <details className="ocr-raw">

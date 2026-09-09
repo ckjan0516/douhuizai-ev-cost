@@ -1,7 +1,6 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, type Auth } from 'firebase/auth'
 import { initializeFirestore, type Firestore } from 'firebase/firestore'
-import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyDacxe-Rq2-9f-6280IdHvj6ct4piB9RzA',
@@ -22,11 +21,9 @@ export function isFirebaseConfigured(): boolean {
 let app: FirebaseApp | null = null
 export let auth: Auth | null = null
 export let cloudDb: Firestore | null = null
-export let storage: FirebaseStorage | null = null
 
 if (isFirebaseConfigured()) {
   app = initializeApp(config)
   auth = getAuth(app)
   cloudDb = initializeFirestore(app, { experimentalForceLongPolling: true })
-  storage = getStorage(app)
 }

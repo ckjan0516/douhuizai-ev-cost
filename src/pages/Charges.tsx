@@ -52,7 +52,7 @@ export function ChargesPage() {
       <section className="page-lead">
         <p className="eyebrow">充電</p>
         <h2>每一次補能</h2>
-        <p className="lede">手打或掃描充電單。金額進每月花費，里程表用來換算每公里成本。</p>
+        <p className="lede">手打或掃描充電單。掃描只抽出數字，照片不會上傳。里程表用來換算每公里成本。</p>
       </section>
 
       <div className="actions">
@@ -77,6 +77,7 @@ export function ChargesPage() {
             await upsertCharge(charge)
             setMode('idle')
             setEditing(null)
+            setPreview(null)
           }}
         />
       ) : null}

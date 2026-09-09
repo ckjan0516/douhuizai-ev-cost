@@ -53,7 +53,7 @@ export function ScanDialog({ open, onClose, onDraft }: ScanDialogProps) {
       <div className="modal" role="dialog" aria-labelledby="scan-title" onClick={(event) => event.stopPropagation()}>
         <p className="eyebrow">充電單</p>
         <h2 id="scan-title">掃描入帳</h2>
-        <p className="lede">拍螢幕或紙本充電紀錄。數字會先預填，你確認後才寫進帳本。</p>
+        <p className="lede">拍螢幕或紙本充電紀錄，只用來抽出金額與度數。確認後只存數字，不存照片。</p>
         <div className="scan-meter" aria-hidden="true">
           <span style={{ width: `${Math.round(progress * 100)}%` }} />
         </div>

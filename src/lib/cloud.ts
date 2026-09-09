@@ -6,10 +6,9 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore'
-import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { defaultVehicle } from '../db'
 import { VEHICLE_ID, type ChargeSession, type FixedExpense, type Vehicle } from '../types'
-import { cloudDb, storage } from './firebase'
+import { cloudDb } from './firebase'
 
 export function explainCloudError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err)
@@ -24,25 +23,19 @@ export function explainCloudError(err: unknown): string {
 
 function requireCloud() {
   if (!cloudDb) throw new Error('尚未設定雲端帳本')
-  return { firestore: cloudDb, files: storage }
+  return cloudDb
 }
 
 function vehicleRef(uid: string) {
-  return doc(requireCloud().firestore, 'users', uid, 'vehicle', VEHICLE_ID)
+  return doc(requireCloud(), 'users', uid, 'vehicle', VEHICLE_ID)
 }
 
 function expenseRef(uid: string, id: string) {
-  return doc(requireCloud().firestore, 'users', uid, 'expenses', id)
+  return doc(requireCloud(), 'users', uid, 'expenses', id)
 }
 
 function chargeRef(uid: string, id: string) {
-  return doc(requireCloud().firestore, 'users', uid, 'charges', id)
-}
-
-function photoRef(uid: string, id: string) {
-  const files = requireCloud().files
-  if (!files) throw new Error('尚未開啟 Firebase Storage')
-  return ref(files, `users/${uid}/charges/${id}`)
+  return doc(requireCloud(), 'users', uid, 'charges', id)
 }
 
 function compact<T extends Record<string, unknown>>(row: T): T {
@@ -66,7 +59,7 @@ export async function saveVehicleCloud(uid: string, vehicle: Vehicle): Promise<v
 }
 
 export async function listExpensesCloud(uid: string): Promise<FixedExpense[]> {
-  const snap = await getDocs(collection(requireCloud().firestore, 'users', uid, 'expenses'))
+  const snap = await getDocs(collection(requireCloud(), 'users', uid, 'expenses'))
   return snap.docs
     .map((row) => row.data() as FixedExpense)
     .sort((a, b) => b.startDate.localeCompare(a.startDate))
@@ -81,27 +74,13 @@ export async function deleteExpenseCloud(uid: string, id: string): Promise<void>
 }
 
 export async function listChargesCloud(uid: string): Promise<ChargeSession[]> {
-  const snap = await getDocs(collection(requireCloud().firestore, 'users', uid, 'charges'))
-  const rows = await Promise.all(
-    snap.docs.map(async (row) => {
-      const charge = row.data() as ChargeSession
-      if (!charge.photoPath) return charge
-      try {
-        return { ...charge, photoUrl: await getDownloadURL(photoRef(uid, charge.id)) }
-      } catch {
-        return charge
-      }
-    }),
-  )
-  return rows.sort((a, b) => b.chargedAt.localeCompare(a.chargedAt))
+  const snap = await getDocs(collection(requireCloud(), 'users', uid, 'charges'))
+  return snap.docs
+    .map((row) => row.data() as ChargeSession)
+    .sort((a, b) => b.chargedAt.localeCompare(a.chargedAt))
 }
 
 export async function saveChargeCloud(uid: string, charge: ChargeSession): Promise<void> {
-  let photoPath = charge.photoPath
-  if (charge.photoBlob) {
-    await uploadBytes(photoRef(uid, charge.id), charge.photoBlob)
-    photoPath = `users/${uid}/charges/${charge.id}`
-  }
   await setDoc(
     chargeRef(uid, charge.id),
     compact({
@@ -115,18 +94,12 @@ export async function saveChargeCloud(uid: string, charge: ChargeSession): Promi
       source: charge.source,
       ocrRawText: charge.ocrRawText,
       createdAt: charge.createdAt,
-      photoPath,
     }),
   )
 }
 
 export async function deleteChargeCloud(uid: string, id: string): Promise<void> {
   await deleteDoc(chargeRef(uid, id))
-  try {
-    await deleteObject(photoRef(uid, id))
-  } catch {
-    // 沒有照片就略過
-  }
 }
 
 export async function replaceAllCloud(

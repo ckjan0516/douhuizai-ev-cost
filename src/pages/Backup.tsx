@@ -44,7 +44,7 @@ export function BackupPage() {
 
       <section className="panel">
         <h3>匯出</h3>
-        <p className="lede">下載完整帳本，包含充電單照片，方便自己再存一份。</p>
+        <p className="lede">下載完整帳本，方便自己再存一份。充電紀錄存的是數字，不含照片。</p>
         <div className="actions">
           <button type="button" className="btn primary" onClick={() => void handleExport()} disabled={!ready}>
             下載 JSON 備份
