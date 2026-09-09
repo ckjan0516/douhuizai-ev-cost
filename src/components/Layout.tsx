@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useLedger } from '../hooks/useLedger'
 import { SignIn } from './SignIn'
 
 const links = [
@@ -12,6 +13,9 @@ const links = [
 
 export function Layout() {
   const { user, ready, signOutUser } = useAuth()
+  const location = useLocation()
+  const { vehicle } = useLedger()
+  const onOverview = location.pathname === '/'
 
   return (
     <div className="shell">
@@ -19,7 +23,9 @@ export function Layout() {
       <header className="topbar">
         <div>
           <p className="eyebrow">行程電腦</p>
-          <h1 className="brand">豆灰仔</h1>
+          {onOverview && user ? null : (
+            <h1 className="brand">{vehicle?.nickname || '豆灰仔'}</h1>
+          )}
         </div>
         {user ? (
           <div className="account">
