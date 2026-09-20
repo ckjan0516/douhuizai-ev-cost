@@ -11,8 +11,9 @@ interface ScanDialogProps {
 }
 
 export function ScanDialog({ open, onClose, onDraft }: ScanDialogProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [status, setStatus] = useState('選一張充電單或現場拍照')
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
+  const [status, setStatus] = useState('可拍現場，也可從相簿選截圖')
   const [progress, setProgress] = useState(0)
   const [busy, setBusy] = useState(false)
 
@@ -48,12 +49,18 @@ export function ScanDialog({ open, onClose, onDraft }: ScanDialogProps) {
     }
   }
 
+  function pickFile(input: HTMLInputElement | null) {
+    if (!input || busy) return
+    input.value = ''
+    input.click()
+  }
+
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div className="modal" role="dialog" aria-labelledby="scan-title" onClick={(event) => event.stopPropagation()}>
         <p className="eyebrow">充電單</p>
         <h2 id="scan-title">掃描入帳</h2>
-        <p className="lede">拍螢幕或紙本充電紀錄，只用來抽出金額與度數。確認後只存數字，不存照片。</p>
+        <p className="lede">可現場拍照，也可從相簿選截圖。只用來抽出金額與度數，確認後只存數字，不存照片。</p>
         <div className="scan-meter" aria-hidden="true">
           <span style={{ width: `${Math.round(progress * 100)}%` }} />
         </div>
@@ -64,15 +71,30 @@ export function ScanDialog({ open, onClose, onDraft }: ScanDialogProps) {
           </button>
           <button
             type="button"
+            className="btn"
+            disabled={busy}
+            onClick={() => pickFile(cameraRef.current)}
+          >
+            拍照
+          </button>
+          <button
+            type="button"
             className="btn primary"
             disabled={busy}
-            onClick={() => inputRef.current?.click()}
+            onClick={() => pickFile(galleryRef.current)}
           >
-            {busy ? '辨識中…' : '拍照或選圖'}
+            {busy ? '辨識中…' : '選相簿／截圖'}
           </button>
         </div>
         <input
-          ref={inputRef}
+          ref={galleryRef}
+          className="sr-only"
+          type="file"
+          accept="image/*"
+          onChange={(event) => void handleFile(event.target.files?.[0])}
+        />
+        <input
+          ref={cameraRef}
           className="sr-only"
           type="file"
           accept="image/*"

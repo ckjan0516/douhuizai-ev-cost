@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Field } from './Field'
-import { CHARGE_PROVIDERS, type ChargeDraft, type ChargeProvider, type ChargeSession, type Vehicle } from '../types'
+import {
+  CHARGE_PROVIDERS,
+  normalizeProvider,
+  type ChargeDraft,
+  type ChargeProvider,
+  type ChargeSession,
+  type Vehicle,
+} from '../types'
 import { fromDateTimeLocal, parseNumber } from '../lib/format'
 import { homeChargeAmount } from '../lib/calc'
 import { nowDateTimeLocal, uid } from '../lib/ids'
@@ -25,13 +32,17 @@ export function emptyDraft(): ChargeDraft {
   }
 }
 
+function withNormalizedProvider(draft: ChargeDraft): ChargeDraft {
+  return { ...draft, provider: normalizeProvider(draft.provider) }
+}
+
 export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: ChargeFormProps) {
-  const [draft, setDraft] = useState<ChargeDraft>(initial ?? emptyDraft())
+  const [draft, setDraft] = useState<ChargeDraft>(withNormalizedProvider(initial ?? emptyDraft()))
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (initial) setDraft(initial)
+    if (initial) setDraft(withNormalizedProvider(initial))
   }, [initial])
 
   const suggestedHome = useMemo(() => {
@@ -62,7 +73,7 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
       await onSave({
         id: editing?.id ?? uid(),
         chargedAt: fromDateTimeLocal(draft.chargedAt),
-        provider: draft.provider,
+        provider: normalizeProvider(draft.provider),
         location: draft.location.trim(),
         kWh,
         costTwd: cost,

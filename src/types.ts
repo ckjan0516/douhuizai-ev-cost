@@ -11,15 +11,26 @@ export const EXPENSE_CATEGORIES = [
 
 export const CHARGE_PROVIDERS = [
   { id: 'home', label: '家充' },
-  { id: 'tesla', label: 'Tesla Supercharger' },
-  { id: 'chargespot', label: 'ChargeSPOT' },
-  { id: 'upower', label: 'U-POWER' },
-  { id: 'cpc', label: '中油' },
-  { id: 'other', label: '其他' },
+  { id: 'tesla', label: '特斯拉超充站' },
+  { id: 'third_party', label: '第三方充電站' },
+  { id: 'other', label: 'EVOASIS及其他' },
 ] as const
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]['id']
 export type ChargeProvider = (typeof CHARGE_PROVIDERS)[number]['id']
+
+const LEGACY_PROVIDERS: Record<string, ChargeProvider> = {
+  chargespot: 'third_party',
+  upower: 'third_party',
+  cpc: 'third_party',
+}
+
+export function normalizeProvider(id: string | undefined | null): ChargeProvider {
+  if (id && CHARGE_PROVIDERS.some((item) => item.id === id)) return id as ChargeProvider
+  if (id && id in LEGACY_PROVIDERS) return LEGACY_PROVIDERS[id]
+  return 'other'
+}
+
 export type Recurrence = 'monthly' | 'yearly' | 'one-off'
 export type ChargeSource = 'manual' | 'ocr'
 export type PeriodKey = 'month' | 'quarter' | 'year' | 'all'

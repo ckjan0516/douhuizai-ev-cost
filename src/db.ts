@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import { todayISO, uid } from './lib/ids'
-import { VEHICLE_ID, type ChargeSession, type FixedExpense, type Vehicle } from './types'
+import { VEHICLE_ID, normalizeProvider, type ChargeSession, type FixedExpense, type Vehicle } from './types'
 
 class LedgerDB extends Dexie {
   vehicle!: Table<Vehicle, string>
@@ -79,7 +79,10 @@ export async function peekLocalLedger(): Promise<{
 }> {
   const vehicle = await db.vehicle.get(VEHICLE_ID)
   const expenses = await db.expenses.toArray()
-  const charges = await db.charges.toArray()
+  const charges = (await db.charges.toArray()).map((charge) => ({
+    ...charge,
+    provider: normalizeProvider(charge.provider),
+  }))
   const meaningful = Boolean(
     vehicle?.model ||
       vehicle?.purchaseItems.some((item) => item.amount > 0) ||

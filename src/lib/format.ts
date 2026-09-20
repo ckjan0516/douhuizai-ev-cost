@@ -1,6 +1,7 @@
 import {
   CHARGE_PROVIDERS,
   EXPENSE_CATEGORIES,
+  normalizeProvider,
   type ChargeProvider,
   type ExpenseCategory,
   type Recurrence,
@@ -25,8 +26,9 @@ export function kwh(value: number): string {
   return `${twd(value, 1)} 度`
 }
 
-export function providerLabel(id: ChargeProvider): string {
-  return CHARGE_PROVIDERS.find((item) => item.id === id)?.label ?? id
+export function providerLabel(id: ChargeProvider | string): string {
+  const provider = normalizeProvider(id)
+  return CHARGE_PROVIDERS.find((item) => item.id === provider)?.label ?? provider
 }
 
 export function categoryLabel(id: ExpenseCategory): string {

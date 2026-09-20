@@ -1,5 +1,5 @@
 import { replaceAllCloud } from './cloud'
-import type { ChargeSession, FixedExpense, Vehicle } from '../types'
+import { normalizeProvider, type ChargeSession, type FixedExpense, type Vehicle } from '../types'
 
 const BACKUP_VERSION = 1
 
@@ -52,6 +52,7 @@ export async function importLedger(file: File, uid: string): Promise<void> {
       const { photoDataUrl, ...rest } = row
       return {
         ...rest,
+        provider: normalizeProvider(rest.provider),
         photoBlob: photoDataUrl ? await dataUrlToBlob(photoDataUrl) : undefined,
       }
     }),

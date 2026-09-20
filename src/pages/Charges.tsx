@@ -3,7 +3,7 @@ import { ChargeForm, emptyDraft } from '../components/ChargeForm'
 import { ScanDialog } from '../components/ScanDialog'
 import { useLedger } from '../hooks/useLedger'
 import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal } from '../lib/format'
-import type { ChargeDraft, ChargeSession } from '../types'
+import { normalizeProvider, type ChargeDraft, type ChargeSession } from '../types'
 
 export function ChargesPage() {
   const { vehicle, charges, ready, error, upsertCharge, removeCharge } = useLedger()
@@ -28,7 +28,7 @@ export function ChargesPage() {
     setEditing(charge)
     setDraft({
       chargedAt: toDateTimeLocal(charge.chargedAt),
-      provider: charge.provider,
+      provider: normalizeProvider(charge.provider),
       location: charge.location,
       kWh: String(charge.kWh),
       costTwd: String(charge.costTwd),
@@ -52,7 +52,7 @@ export function ChargesPage() {
       <section className="page-lead">
         <p className="eyebrow">充電</p>
         <h2>每一次補能</h2>
-        <p className="lede">手打或掃描充電單。掃描只抽出數字，照片不會上傳。里程表用來換算每公里成本。</p>
+        <p className="lede">手打或掃描充電單。掃描可拍照，也可從相簿選截圖；只抽出數字，照片不會上傳。里程表用來換算每公里成本。</p>
       </section>
 
       <div className="actions">

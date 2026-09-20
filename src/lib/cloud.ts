@@ -7,7 +7,7 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import { defaultVehicle } from '../db'
-import { VEHICLE_ID, type ChargeSession, type FixedExpense, type Vehicle } from '../types'
+import { VEHICLE_ID, normalizeProvider, type ChargeSession, type FixedExpense, type Vehicle } from '../types'
 import { cloudDb } from './firebase'
 
 export function explainCloudError(err: unknown): string {
@@ -76,7 +76,10 @@ export async function deleteExpenseCloud(uid: string, id: string): Promise<void>
 export async function listChargesCloud(uid: string): Promise<ChargeSession[]> {
   const snap = await getDocs(collection(requireCloud(), 'users', uid, 'charges'))
   return snap.docs
-    .map((row) => row.data() as ChargeSession)
+    .map((row) => {
+      const charge = row.data() as ChargeSession
+      return { ...charge, provider: normalizeProvider(charge.provider) }
+    })
     .sort((a, b) => b.chargedAt.localeCompare(a.chargedAt))
 }
 
@@ -86,7 +89,7 @@ export async function saveChargeCloud(uid: string, charge: ChargeSession): Promi
     compact({
       id: charge.id,
       chargedAt: charge.chargedAt,
-      provider: charge.provider,
+      provider: normalizeProvider(charge.provider),
       location: charge.location,
       kWh: charge.kWh,
       costTwd: charge.costTwd,
