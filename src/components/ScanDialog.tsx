@@ -33,7 +33,7 @@ export function ScanDialog({ open, onClose, onDraft }: ScanDialogProps) {
         ...emptyDraft(),
         ...draft,
         chargedAt: draft.chargedAt ?? nowDateTimeLocal(),
-        provider: draft.provider ?? 'other',
+        provider: draft.provider ?? 'evoasis',
         location: draft.location ?? '',
         kWh: draft.kWh ?? '',
         costTwd: draft.costTwd ?? '',

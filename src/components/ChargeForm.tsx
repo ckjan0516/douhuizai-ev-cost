@@ -23,7 +23,7 @@ interface ChargeFormProps {
 export function emptyDraft(): ChargeDraft {
   return {
     chargedAt: nowDateTimeLocal(),
-    provider: 'home',
+    provider: 'evoasis',
     location: '',
     kWh: '',
     costTwd: '',

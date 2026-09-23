@@ -89,8 +89,8 @@ async function prepareImage(image: Blob): Promise<Blob> {
 }
 
 function guessProvider(text: string): ChargeProvider {
+  if (/evoasis/i.test(text)) return 'evoasis'
   if (/tesla|supercharger|特斯拉超充/i.test(text)) return 'tesla'
-  if (/evoasis/i.test(text)) return 'other'
   if (/家充|台電|住家|住家充電/i.test(text)) return 'home'
   if (/chargespot|u-?power|中油|cpc|充電站/i.test(text)) return 'third_party'
   return 'other'

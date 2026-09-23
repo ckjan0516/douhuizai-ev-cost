@@ -10,10 +10,11 @@ export const EXPENSE_CATEGORIES = [
 ] as const
 
 export const CHARGE_PROVIDERS = [
+  { id: 'evoasis', label: 'EVOASIS' },
   { id: 'home', label: '家充' },
   { id: 'tesla', label: '特斯拉超充站' },
   { id: 'third_party', label: '第三方充電站' },
-  { id: 'other', label: 'EVOASIS及其他' },
+  { id: 'other', label: '其他' },
 ] as const
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]['id']
