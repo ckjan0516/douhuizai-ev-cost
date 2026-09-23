@@ -152,13 +152,14 @@ export function summarizePeriod(
   const charge = chargeCostInRange(charges, range)
   const total = amort + fixed + charge
   const km = kmInRange(vehicle, charges, range)
+  const operating = fixed + charge
   return {
     amort,
     fixed,
     charge,
     total,
     km,
-    perKm: km ? total / km : null,
+    perKm: km ? operating / km : null,
     months: months.length,
   }
 }
@@ -185,6 +186,7 @@ export function monthlySeries(
     const charge = chargeCostInRange(charges, range)
     const total = amort + fixed + charge
     const km = kmInRange(vehicle, charges, range)
+    const operating = fixed + charge
     series.push({
       ...key,
       amort,
@@ -192,7 +194,7 @@ export function monthlySeries(
       charge,
       total,
       km,
-      perKm: km ? total / km : null,
+      perKm: km ? operating / km : null,
       months: 1,
       label: `${key.month + 1}月`,
     })

@@ -80,8 +80,8 @@ export function OverviewPage() {
           )}
           <p className="odometer-sub">
             {summary.km == null
-              ? '充電時記下里程表，就能換算每公里要多少'
-              : `這段期間走了 ${twd(summary.km)} 公里`}
+              ? '充電時記下里程表，就能換算每公里要多少。不含購車費用，貸款已算在固定支出。'
+              : `這段期間走了 ${twd(summary.km)} 公里。不含購車費用，貸款已算在固定支出。`}
           </p>
         </div>
       </section>
