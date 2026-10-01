@@ -22,6 +22,7 @@ export interface CostBreakdown {
   total: number
   km: number | null
   perKm: number | null
+  perKmWithPurchase: number | null
   months: number
 }
 
@@ -160,6 +161,7 @@ export function summarizePeriod(
     total,
     km,
     perKm: km ? operating / km : null,
+    perKmWithPurchase: km ? total / km : null,
     months: months.length,
   }
 }
@@ -195,6 +197,7 @@ export function monthlySeries(
       total,
       km,
       perKm: km ? operating / km : null,
+      perKmWithPurchase: km ? total / km : null,
       months: 1,
       label: `${key.month + 1}月`,
     })

@@ -24,6 +24,7 @@ const periods: Array<{ id: PeriodKey; label: string }> = [
 export function OverviewPage() {
   const { vehicle, expenses, charges, ready, error, migrated } = useLedger()
   const [period, setPeriod] = useState<PeriodKey>('month')
+  const [includePurchase, setIncludePurchase] = useState(false)
 
   const summary = useMemo(() => {
     if (!vehicle) return null
@@ -39,6 +40,7 @@ export function OverviewPage() {
   if (!ready || !vehicle || !summary) return <p className="fine">讀取行程電腦…</p>
 
   const recent = charges.slice(0, 4)
+  const shownPerKm = includePurchase ? summary.perKmWithPurchase : summary.perKm
 
   return (
     <div className="stack">
@@ -68,20 +70,45 @@ export function OverviewPage() {
         </div>
 
         <div className="odometer">
-          <p className="odometer-label">每公里成本</p>
-          {summary.perKm == null ? (
+          <div className="odometer-head">
+            <p className="odometer-label">每公里成本</p>
+            <div className="period-switch" role="tablist" aria-label="每公里成本算法">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!includePurchase}
+                className={includePurchase ? 'chip' : 'chip is-on'}
+                onClick={() => setIncludePurchase(false)}
+              >
+                不含購車攤提
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={includePurchase}
+                className={includePurchase ? 'chip is-on' : 'chip'}
+                onClick={() => setIncludePurchase(true)}
+              >
+                含購車攤提
+              </button>
+            </div>
+          </div>
+          {shownPerKm == null ? (
             <p className="odometer-value is-empty">尚缺里程</p>
           ) : (
             <p className="odometer-value">
               <span className="currency">NT$</span>
-              {twd(summary.perKm, 2)}
+              {twd(shownPerKm, 2)}
               <span className="unit">/ km</span>
             </p>
           )}
           <p className="odometer-sub">
             {summary.km == null
-              ? '充電時記下里程表，就能換算每公里要多少。不含購車費用，貸款已算在固定支出。'
-              : `這段期間走了 ${twd(summary.km)} 公里。不含購車費用，貸款已算在固定支出。`}
+              ? '充電時記下里程表，就能換算每公里要多少。'
+              : `這段期間走了 ${twd(summary.km)} 公里。`}
+            {includePurchase
+              ? ' 目前含購車每月攤提。'
+              : ' 目前不含購車費用；貸款已算在固定支出。'}
           </p>
         </div>
       </section>

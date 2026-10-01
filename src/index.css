@@ -251,6 +251,14 @@ a {
   border-top: 1px solid var(--cable);
 }
 
+.odometer-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .odometer-label,
 .stat-label,
 .field-label {
