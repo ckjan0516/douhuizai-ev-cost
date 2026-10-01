@@ -34,7 +34,7 @@ export function normalizeProvider(id: string | undefined | null): ChargeProvider
 
 export type Recurrence = 'monthly' | 'yearly' | 'one-off'
 export type ChargeSource = 'manual' | 'ocr'
-export type PeriodKey = 'month' | 'quarter' | 'year' | 'all'
+export type PeriodKey = 'month' | 'lastMonth' | 'quarter' | 'half' | 'year' | 'custom'
 
 export interface PurchaseItem {
   id: string

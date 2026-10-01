@@ -33,23 +33,31 @@ import {
 import { useLedger } from '../hooks/useLedger'
 import type { PeriodKey } from '../types'
 
-const periods: Array<{ id: PeriodKey; label: string }> = [
+const quickPeriods: Array<{ id: PeriodKey; label: string }> = [
   { id: 'month', label: '本月' },
-  { id: 'quarter', label: '近 3 個月' },
+  { id: 'lastMonth', label: '上月' },
+]
+
+const menuPeriods: Array<{ id: PeriodKey; label: string }> = [
+  { id: 'quarter', label: '近三月' },
+  { id: 'half', label: '近半年' },
   { id: 'year', label: '今年' },
-  { id: 'all', label: '自購車' },
+  { id: 'custom', label: '輸入區間' },
 ]
 
 export function OverviewPage() {
   const { vehicle, expenses, charges, ready, error, migrated } = useLedger()
   const [period, setPeriod] = useState<PeriodKey>('month')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
   const [includePurchase, setIncludePurchase] = useState(false)
   const [detail, setDetail] = useState<'amort' | 'fixed' | 'charge' | null>(null)
+  const customRange = { start: customStart, end: customEnd }
 
   const summary = useMemo(() => {
     if (!vehicle) return null
-    return summarizePeriod(vehicle, expenses, charges, period)
-  }, [vehicle, expenses, charges, period])
+    return summarizePeriod(vehicle, expenses, charges, period, new Date(), customRange)
+  }, [vehicle, expenses, charges, period, customStart, customEnd])
 
   const chart = useMemo(() => {
     if (!vehicle) return []
@@ -58,7 +66,7 @@ export function OverviewPage() {
 
   const detailData = useMemo(() => {
     if (!vehicle) return null
-    const range = periodRange(period, new Date(), vehicle.purchaseDate)
+    const range = periodRange(period, new Date(), vehicle.purchaseDate, customRange)
     const months = monthsInRange(range.start, range.end)
     return {
       months: months.length,
@@ -67,13 +75,25 @@ export function OverviewPage() {
       fixedLines: fixedBreakdown(expenses, months),
       chargeLines: chargesInRange(charges, range),
     }
-  }, [vehicle, expenses, charges, period])
+  }, [vehicle, expenses, charges, period, customStart, customEnd])
 
   if (error) return <p className="alert">{error}</p>
   if (!ready || !vehicle || !summary || !detailData) return <p className="fine">讀取行程電腦…</p>
 
   const recent = charges.slice(0, 4)
   const shownPerKm = includePurchase ? summary.perKmWithPurchase : summary.perKm
+  const menuValue = period === 'month' || period === 'lastMonth' ? '' : period
+
+  function choosePeriod(next: PeriodKey) {
+    setPeriod(next)
+    if (next !== 'custom') return
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    setCustomStart((current) => current || `${year}-${month}-01`)
+    setCustomEnd((current) => current || `${year}-${month}-${day}`)
+  }
 
   return (
     <div className="stack">
@@ -86,19 +106,57 @@ export function OverviewPage() {
             <p className="eyebrow">{vehicle.model || '尚未填車型'}</p>
             <h2 className="display-name">{vehicle.nickname}</h2>
           </div>
-          <div className="period-switch" role="tablist" aria-label="統計期間">
-            {periods.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={period === item.id}
-                className={period === item.id ? 'chip is-on' : 'chip'}
-                onClick={() => setPeriod(item.id)}
+          <div className="period-controls">
+            <div className="period-switch" role="tablist" aria-label="統計期間">
+              {quickPeriods.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={period === item.id}
+                  className={period === item.id ? 'chip is-on' : 'chip'}
+                  onClick={() => choosePeriod(item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <select
+                className={menuValue ? 'period-select is-on' : 'period-select'}
+                aria-label="其他統計區間"
+                value={menuValue}
+                onChange={(event) => {
+                  const next = event.target.value as PeriodKey
+                  if (next) choosePeriod(next)
+                }}
               >
-                {item.label}
-              </button>
-            ))}
+                <option value="">更多區間</option>
+                {menuPeriods.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {period === 'custom' ? (
+              <div className="custom-range">
+                <label>
+                  起
+                  <input
+                    type="date"
+                    value={customStart}
+                    onChange={(event) => setCustomStart(event.target.value)}
+                  />
+                </label>
+                <label>
+                  迄
+                  <input
+                    type="date"
+                    value={customEnd}
+                    onChange={(event) => setCustomEnd(event.target.value)}
+                  />
+                </label>
+              </div>
+            ) : null}
           </div>
         </div>
 

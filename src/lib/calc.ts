@@ -41,16 +41,33 @@ export function periodRange(
   key: PeriodKey,
   now: Date,
   purchaseDate: string,
+  custom?: { start: string; end: string },
 ): PeriodRange {
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
   const purchased = parseDateOnly(purchaseDate)
   let start = purchased
+  let end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
   if (key === 'month') {
     start = new Date(now.getFullYear(), now.getMonth(), 1)
+  } else if (key === 'lastMonth') {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    end = new Date(now.getFullYear(), now.getMonth(), 1)
   } else if (key === 'quarter') {
     start = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+  } else if (key === 'half') {
+    start = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   } else if (key === 'year') {
     start = new Date(now.getFullYear(), 0, 1)
+  } else if (key === 'custom') {
+    const rawStart = custom?.start
+      ? parseDateOnly(custom.start)
+      : new Date(now.getFullYear(), now.getMonth(), 1)
+    const rawEnd = custom?.end
+      ? parseDateOnly(custom.end)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const earlier = rawStart <= rawEnd ? rawStart : rawEnd
+    const later = rawStart <= rawEnd ? rawEnd : rawStart
+    start = earlier
+    end = new Date(later.getFullYear(), later.getMonth(), later.getDate() + 1)
   }
   if (start < purchased) start = purchased
   return { start, end }
@@ -150,8 +167,9 @@ export function summarizePeriod(
   charges: ChargeSession[],
   key: PeriodKey,
   now = new Date(),
+  custom?: { start: string; end: string },
 ): CostBreakdown {
-  const range = periodRange(key, now, vehicle.purchaseDate)
+  const range = periodRange(key, now, vehicle.purchaseDate, custom)
   const months = monthsInRange(range.start, range.end)
   const amortEach = monthlyAmortization(vehicle)
   const amort = amortEach * months.length

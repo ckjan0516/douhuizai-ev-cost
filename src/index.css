@@ -212,6 +212,53 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.period-controls {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.period-select,
+.custom-range input {
+  border: 1px solid var(--cable);
+  background: var(--raised);
+  color: var(--paper);
+  font: inherit;
+}
+
+.period-select {
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.period-select.is-on {
+  background: var(--amber);
+  color: #20170d;
+  border-color: var(--amber);
+}
+
+.custom-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.custom-range label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.custom-range input {
+  border-radius: 4px;
+  padding: 8px 10px;
+  color-scheme: dark;
 }
 
 .chip,
