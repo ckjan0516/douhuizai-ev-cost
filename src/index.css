@@ -308,6 +308,43 @@ a {
   padding: 14px;
 }
 
+.stat-hint {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+button.stat.is-openable {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--cable);
+  background: var(--raised);
+  color: inherit;
+  border-radius: 4px;
+}
+
+button.stat.is-openable:hover,
+button.stat.is-openable:focus-visible {
+  border-color: var(--amber);
+}
+
+.breakdown-modal {
+  max-height: min(80vh, 720px);
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+}
+
+.breakdown-body {
+  min-height: 0;
+  overflow: auto;
+  margin: 8px 0 4px;
+}
+
+.breakdown-body .timeline {
+  margin-top: 0;
+}
+
 .stat-value {
   margin-top: 6px;
   font-size: 22px;

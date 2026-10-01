@@ -82,24 +82,30 @@ export function isExpenseActiveInMonth(expense: FixedExpense, key: MonthKey): bo
   return true
 }
 
+export function expenseCostForMonth(expense: FixedExpense, key: MonthKey): number {
+  if (!isExpenseActiveInMonth(expense, key)) return 0
+  if (expense.recurrence === 'monthly') return expense.amount
+  if (expense.recurrence === 'yearly') return expense.amount / 12
+  const start = parseDateOnly(expense.startDate)
+  if (start.getFullYear() === key.year && start.getMonth() === key.month) return expense.amount
+  return 0
+}
+
 export function fixedCostForMonth(expenses: FixedExpense[], key: MonthKey): number {
-  let total = 0
-  for (const expense of expenses) {
-    if (!isExpenseActiveInMonth(expense, key)) continue
-    if (expense.recurrence === 'monthly') {
-      total += expense.amount
-      continue
-    }
-    if (expense.recurrence === 'yearly') {
-      total += expense.amount / 12
-      continue
-    }
-    const start = parseDateOnly(expense.startDate)
-    if (start.getFullYear() === key.year && start.getMonth() === key.month) {
-      total += expense.amount
-    }
-  }
-  return total
+  return expenses.reduce((sum, expense) => sum + expenseCostForMonth(expense, key), 0)
+}
+
+export function fixedBreakdown(
+  expenses: FixedExpense[],
+  months: MonthKey[],
+): Array<{ expense: FixedExpense; amount: number }> {
+  return expenses
+    .map((expense) => ({
+      expense,
+      amount: months.reduce((sum, month) => sum + expenseCostForMonth(expense, month), 0),
+    }))
+    .filter((row) => row.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.expense.name.localeCompare(b.expense.name, 'zh-Hant'))
 }
 
 export function chargesInRange(
