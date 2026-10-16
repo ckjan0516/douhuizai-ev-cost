@@ -52,15 +52,15 @@ export function ChargesPage() {
       <section className="page-lead">
         <p className="eyebrow">充電</p>
         <h2>每一次補能</h2>
-        <p className="lede">手打或掃描充電單。掃描可拍照，也可從相簿選截圖；只抽出數字，照片不會上傳。里程表用來換算每公里成本。</p>
+        <p className="lede">先手打一筆，記下度數、金額和里程。也可以掃描充電單，拍照或從相簿選截圖。</p>
       </section>
 
       <div className="actions">
-        <button type="button" className="btn primary" onClick={() => setScanOpen(true)}>
-          掃描充電單
-        </button>
-        <button type="button" className="btn ghost" onClick={openManual}>
+        <button type="button" className="btn primary" onClick={openManual}>
           手打一筆
+        </button>
+        <button type="button" className="btn ghost" onClick={() => setScanOpen(true)}>
+          掃描充電單
         </button>
       </div>
 
@@ -87,7 +87,7 @@ export function ChargesPage() {
       ) : null}
 
       {grouped.length === 0 ? (
-        <p className="empty">還沒有充電紀錄。充完電掃一張單，或先手打度數與金額。</p>
+        <p className="empty">還沒有充電紀錄。先手打度數、金額和里程。</p>
       ) : (
         <ul className="timeline">
           {grouped.map((charge) => (

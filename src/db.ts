@@ -23,7 +23,7 @@ export function defaultVehicle(): Vehicle {
   return {
     id: VEHICLE_ID,
     nickname: '豆灰仔',
-    model: '',
+    model: '2026 Model Y RWD',
     purchaseDate: todayISO(),
     purchaseItems: [{ id: uid(), name: '車價', amount: 0 }],
     ownershipYears: 8,

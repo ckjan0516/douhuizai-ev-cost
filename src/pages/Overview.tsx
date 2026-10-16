@@ -31,19 +31,30 @@ import {
   twd,
 } from '../lib/format'
 import { useLedger } from '../hooks/useLedger'
-import type { PeriodKey } from '../types'
+import { EFFICIENCY_BASELINE, type PeriodKey } from '../types'
 
 const quickPeriods: Array<{ id: PeriodKey; label: string }> = [
   { id: 'month', label: '本月' },
-  { id: 'lastMonth', label: '上月' },
+  { id: 'all', label: '持有至今' },
 ]
 
 const menuPeriods: Array<{ id: PeriodKey; label: string }> = [
+  { id: 'lastMonth', label: '上月' },
   { id: 'quarter', label: '近三月' },
   { id: 'half', label: '近半年' },
   { id: 'year', label: '今年' },
   { id: 'custom', label: '輸入區間' },
 ]
+
+const baselineWhPerKm = 1000 / EFFICIENCY_BASELINE.kmPerKwh
+
+function efficiencyText(gap: number | null): string {
+  if (gap == null) return ''
+  const rounded = Math.round(gap)
+  if (rounded === 0) return '與基準相同'
+  if (rounded > 0) return `高於基準 ${rounded}%`
+  return `低於基準 ${Math.abs(rounded)}%`
+}
 
 export function OverviewPage() {
   const { vehicle, expenses, charges, ready, error, migrated } = useLedger()
@@ -82,7 +93,9 @@ export function OverviewPage() {
 
   const recent = charges.slice(0, 4)
   const shownPerKm = includePurchase ? summary.perKmWithPurchase : summary.perKm
-  const menuValue = period === 'month' || period === 'lastMonth' ? '' : period
+  const menuValue = period === 'month' || period === 'all' ? '' : period
+  const efficiencyGap =
+    summary.whPerKm == null ? null : ((summary.whPerKm - baselineWhPerKm) / baselineWhPerKm) * 100
 
   function choosePeriod(next: PeriodKey) {
     setPeriod(next)
@@ -103,7 +116,7 @@ export function OverviewPage() {
       <section className="cluster">
         <div className="cluster-head">
           <div>
-            <p className="eyebrow">{vehicle.model || '尚未填車型'}</p>
+            <p className="eyebrow">{vehicle.model || EFFICIENCY_BASELINE.model}</p>
             <h2 className="display-name">{vehicle.nickname}</h2>
           </div>
           <div className="period-controls">
@@ -200,6 +213,27 @@ export function OverviewPage() {
             {includePurchase
               ? ' 目前含購車每月攤提。'
               : ' 目前不含購車費用；貸款已算在固定支出。'}
+          </p>
+        </div>
+
+        <div className="odometer">
+          <div className="odometer-head">
+            <p className="odometer-label">電耗</p>
+            <p className="fine">{EFFICIENCY_BASELINE.model}</p>
+          </div>
+          {summary.whPerKm == null ? (
+            <p className="odometer-value is-empty">尚缺里程</p>
+          ) : (
+            <p className="odometer-value">
+              {twd(summary.whPerKm, 0)}
+              <span className="unit">Wh/km</span>
+            </p>
+          )}
+          <p className="odometer-sub">
+            {summary.whPerKm == null
+              ? `基準 ${twd(baselineWhPerKm, 0)} Wh/km。充電時記下里程表，就能比較。`
+              : `${efficiencyText(efficiencyGap)}。基準 ${twd(baselineWhPerKm, 0)} Wh/km，這段充了 ${kwh(summary.kWh)}。`}
+            {` ${EFFICIENCY_BASELINE.source} ${EFFICIENCY_BASELINE.kmPerKwh} 公里/度。帳本用充電度數除以里程，含充電損耗。`}
           </p>
         </div>
       </section>

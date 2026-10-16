@@ -23,6 +23,8 @@ export interface CostBreakdown {
   km: number | null
   perKm: number | null
   perKmWithPurchase: number | null
+  kWh: number
+  whPerKm: number | null
   months: number
 }
 
@@ -57,6 +59,8 @@ export function periodRange(
     start = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   } else if (key === 'year') {
     start = new Date(now.getFullYear(), 0, 1)
+  } else if (key === 'all') {
+    start = purchased
   } else if (key === 'custom') {
     const rawStart = custom?.start
       ? parseDateOnly(custom.start)
@@ -139,6 +143,15 @@ export function chargeCostInRange(charges: ChargeSession[], range: PeriodRange):
   return chargesInRange(charges, range).reduce((sum, charge) => sum + charge.costTwd, 0)
 }
 
+export function chargeKwhInRange(charges: ChargeSession[], range: PeriodRange): number {
+  return chargesInRange(charges, range).reduce((sum, charge) => sum + charge.kWh, 0)
+}
+
+export function whPerKm(kWh: number, km: number | null): number | null {
+  if (km == null || km <= 0) return null
+  return (kWh * 1000) / km
+}
+
 export function kmInRange(
   vehicle: Vehicle,
   charges: ChargeSession[],
@@ -175,6 +188,7 @@ export function summarizePeriod(
   const amort = amortEach * months.length
   const fixed = months.reduce((sum, month) => sum + fixedCostForMonth(expenses, month), 0)
   const charge = chargeCostInRange(charges, range)
+  const chargedKwh = chargeKwhInRange(charges, range)
   const total = amort + fixed + charge
   const km = kmInRange(vehicle, charges, range)
   const operating = fixed + charge
@@ -186,6 +200,8 @@ export function summarizePeriod(
     km,
     perKm: km ? operating / km : null,
     perKmWithPurchase: km ? total / km : null,
+    kWh: chargedKwh,
+    whPerKm: whPerKm(chargedKwh, km),
     months: months.length,
   }
 }
@@ -210,6 +226,7 @@ export function monthlySeries(
     const amort = owned ? monthlyAmortization(vehicle) : 0
     const fixed = owned ? fixedCostForMonth(expenses, key) : 0
     const charge = chargeCostInRange(charges, range)
+    const chargedKwh = chargeKwhInRange(charges, range)
     const total = amort + fixed + charge
     const km = kmInRange(vehicle, charges, range)
     const operating = fixed + charge
@@ -222,6 +239,8 @@ export function monthlySeries(
       km,
       perKm: km ? operating / km : null,
       perKmWithPurchase: km ? total / km : null,
+      kWh: chargedKwh,
+      whPerKm: whPerKm(chargedKwh, km),
       months: 1,
       label: `${key.month + 1}月`,
     })

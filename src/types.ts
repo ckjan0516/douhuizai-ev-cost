@@ -34,7 +34,13 @@ export function normalizeProvider(id: string | undefined | null): ChargeProvider
 
 export type Recurrence = 'monthly' | 'yearly' | 'one-off'
 export type ChargeSource = 'manual' | 'ocr'
-export type PeriodKey = 'month' | 'lastMonth' | 'quarter' | 'half' | 'year' | 'custom'
+export type PeriodKey = 'month' | 'lastMonth' | 'quarter' | 'half' | 'year' | 'all' | 'custom'
+
+export const EFFICIENCY_BASELINE = {
+  model: '2026 Model Y RWD',
+  kmPerKwh: 7.4,
+  source: '經濟部能源署能效標示',
+} as const
 
 export interface PurchaseItem {
   id: string

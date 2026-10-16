@@ -4,7 +4,7 @@ import { useLedger } from '../hooks/useLedger'
 import { monthlyAmortization, purchaseTotal } from '../lib/calc'
 import { money, parseNumber } from '../lib/format'
 import { uid } from '../lib/ids'
-import type { PurchaseItem, Vehicle } from '../types'
+import { EFFICIENCY_BASELINE, type PurchaseItem, type Vehicle } from '../types'
 
 export function PurchasePage() {
   const { vehicle, ready, error, updateVehicle } = useLedger()
@@ -43,6 +43,7 @@ export function PurchasePage() {
     }
     await updateVehicle({
       ...draft,
+      model: draft.model || EFFICIENCY_BASELINE.model,
       ownershipYears: years,
       residualValue: Number(draft.residualValue) || 0,
       startOdometer: Number(draft.startOdometer) || 0,
@@ -68,11 +69,15 @@ export function PurchasePage() {
             />
           </Field>
           <Field label="車型">
-            <input
-              value={draft.model}
+            <select
+              value={draft.model || EFFICIENCY_BASELINE.model}
               onChange={(event) => setDraft({ ...draft, model: event.target.value })}
-              placeholder="例如 Model Y 後驅"
-            />
+            >
+              {draft.model && draft.model !== EFFICIENCY_BASELINE.model ? (
+                <option value={draft.model}>{draft.model}</option>
+              ) : null}
+              <option value={EFFICIENCY_BASELINE.model}>{EFFICIENCY_BASELINE.model}</option>
+            </select>
           </Field>
           <Field label="購車日">
             <input
