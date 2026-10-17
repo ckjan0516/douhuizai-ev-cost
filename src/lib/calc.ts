@@ -152,6 +152,104 @@ export function whPerKm(kWh: number, km: number | null): number | null {
   return (kWh * 1000) / km
 }
 
+export interface ProviderShare {
+  provider: string
+  count: number
+  kWh: number
+  cost: number
+}
+
+export interface HabitBand {
+  id: string
+  label: string
+  count: number
+  kWh: number
+  cost: number
+}
+
+export interface ChargeLeg {
+  km: number
+  perKm: number
+  whPerKm: number
+  kmPerKwh: number
+}
+
+const HABIT_BANDS = [
+  { id: 'night', label: '深夜 0–6', from: 0, to: 6 },
+  { id: 'morning', label: '上午 6–12', from: 6, to: 12 },
+  { id: 'afternoon', label: '下午 12–18', from: 12, to: 18 },
+  { id: 'evening', label: '晚上 18–24', from: 18, to: 24 },
+]
+
+export function averageUnitPrice(charges: ChargeSession[]): number | null {
+  const charged = charges.reduce((sum, charge) => sum + charge.kWh, 0)
+  if (charged <= 0) return null
+  const cost = charges.reduce((sum, charge) => sum + charge.costTwd, 0)
+  return cost / charged
+}
+
+export function providerShares(charges: ChargeSession[]): ProviderShare[] {
+  const rows = new Map<string, ProviderShare>()
+  for (const charge of charges) {
+    const row = rows.get(charge.provider) ?? { provider: charge.provider, count: 0, kWh: 0, cost: 0 }
+    row.count += 1
+    row.kWh += charge.kWh
+    row.cost += charge.costTwd
+    rows.set(charge.provider, row)
+  }
+  return [...rows.values()].sort((a, b) => b.cost - a.cost || b.kWh - a.kWh)
+}
+
+export function chargingHabits(charges: ChargeSession[]): {
+  bands: HabitBand[]
+  weekday: number
+  weekend: number
+} {
+  const bands: HabitBand[] = HABIT_BANDS.map((band) => ({
+    id: band.id,
+    label: band.label,
+    count: 0,
+    kWh: 0,
+    cost: 0,
+  }))
+  let weekday = 0
+  let weekend = 0
+  for (const charge of charges) {
+    const at = new Date(charge.chargedAt)
+    const hour = at.getHours()
+    const band = bands.find((_, index) => hour >= HABIT_BANDS[index].from && hour < HABIT_BANDS[index].to)
+    const target = band ?? bands[bands.length - 1]
+    target.count += 1
+    target.kWh += charge.kWh
+    target.cost += charge.costTwd
+    const day = at.getDay()
+    if (day === 0 || day === 6) weekend += 1
+    else weekday += 1
+  }
+  return { bands, weekday, weekend }
+}
+
+export function chargeLegs(charges: ChargeSession[]): Map<string, ChargeLeg> {
+  const sorted = charges
+    .filter((charge) => charge.odometerKm != null)
+    .slice()
+    .sort((a, b) => new Date(a.chargedAt).getTime() - new Date(b.chargedAt).getTime())
+  const legs = new Map<string, ChargeLeg>()
+  for (let index = 1; index < sorted.length; index += 1) {
+    const previous = sorted[index - 1]
+    const current = sorted[index]
+    const driven = (current.odometerKm as number) - (previous.odometerKm as number)
+    if (driven <= 0 || current.kWh <= 0) continue
+    legs.set(current.id, {
+      km: driven,
+      perKm: current.costTwd / driven,
+      whPerKm: (current.kWh * 1000) / driven,
+      kmPerKwh: driven / current.kWh,
+    })
+  }
+  return legs
+}
+
 export function kmInRange(
   vehicle: Vehicle,
   charges: ChargeSession[],

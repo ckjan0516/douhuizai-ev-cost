@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { ChargeForm, emptyDraft } from '../components/ChargeForm'
 import { ScanDialog } from '../components/ScanDialog'
 import { useLedger } from '../hooks/useLedger'
-import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal } from '../lib/format'
+import { chargeLegs } from '../lib/calc'
+import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal, twd } from '../lib/format'
 import { normalizeProvider, type ChargeDraft, type ChargeSession } from '../types'
 
 export function ChargesPage() {
@@ -14,6 +15,7 @@ export function ChargesPage() {
   const [preview, setPreview] = useState<string | null>(null)
 
   const grouped = useMemo(() => charges, [charges])
+  const legs = useMemo(() => chargeLegs(charges), [charges])
 
   if (error) return <p className="alert">{error}</p>
   if (!ready || !vehicle) return <p className="fine">讀取充電紀錄…</p>
@@ -99,6 +101,9 @@ export function ChargesPage() {
                     {formatDateTime(charge.chargedAt)}
                     {charge.location ? ` · ${charge.location}` : ''}
                     {charge.odometerKm != null ? ` · ${charge.odometerKm} km` : ''}
+                    {legs.get(charge.id)
+                      ? ` · 這趟 ${twd(legs.get(charge.id)!.km)} km · ${money(legs.get(charge.id)!.perKm, 2)}/km`
+                      : ''}
                     {charge.source === 'ocr' ? ' · 掃描' : ''}
                   </p>
                 </div>

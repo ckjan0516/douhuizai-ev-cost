@@ -401,6 +401,48 @@ button.stat.is-openable:focus-visible {
   color: var(--ion);
 }
 
+.report-stats {
+  margin-top: 8px;
+}
+
+.report-block {
+  margin-top: 18px;
+}
+
+.report-block h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.share-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.share-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.share-meter {
+  height: 6px;
+  margin-top: 6px;
+  background: rgba(232, 160, 74, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.share-meter span {
+  display: block;
+  height: 100%;
+  background: var(--ion);
+}
+
 .chart-wrap {
   height: 220px;
   margin-top: 8px;

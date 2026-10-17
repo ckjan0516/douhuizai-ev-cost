@@ -12,11 +12,15 @@ import {
 import { BreakdownDialog } from '../components/BreakdownDialog'
 import {
   chargesInRange,
+  chargingHabits,
+  chargeLegs,
+  averageUnitPrice,
   fixedBreakdown,
   monthsInRange,
   monthlyAmortization,
   monthlySeries,
   periodRange,
+  providerShares,
   purchaseTotal,
   summarizePeriod,
 } from '../lib/calc'
@@ -96,6 +100,13 @@ export function OverviewPage() {
   const menuValue = period === 'month' || period === 'all' ? '' : period
   const efficiencyGap =
     summary.whPerKm == null ? null : ((summary.whPerKm - baselineWhPerKm) / baselineWhPerKm) * 100
+  const unitPrice = averageUnitPrice(detailData.chargeLines)
+  const kmPerKwh = summary.km != null && summary.kWh > 0 ? summary.km / summary.kWh : null
+  const brands = providerShares(detailData.chargeLines)
+  const habits = chargingHabits(detailData.chargeLines)
+  const legs = chargeLegs(charges)
+  const brandCost = brands.reduce((sum, row) => sum + row.cost, 0)
+  const habitKwh = habits.bands.reduce((sum, row) => sum + row.kWh, 0)
 
   function choosePeriod(next: PeriodKey) {
     setPeriod(next)
@@ -263,6 +274,90 @@ export function OverviewPage() {
 
       <section className="panel">
         <div className="panel-head">
+          <h3>充電報表</h3>
+        </div>
+        {detailData.chargeLines.length === 0 ? (
+          <p className="empty">這段期間還沒有充電紀錄。</p>
+        ) : (
+          <>
+            <div className="split-stats report-stats">
+              <article className="stat">
+                <p className="stat-label">次數</p>
+                <p className="stat-value">{detailData.chargeLines.length}</p>
+                <p className="stat-hint">
+                  平日 {habits.weekday} · 週末 {habits.weekend}
+                </p>
+              </article>
+              <article className="stat">
+                <p className="stat-label">充電量</p>
+                <p className="stat-value ion">{kwh(summary.kWh)}</p>
+                <p className="stat-hint">這段區間合計</p>
+              </article>
+              <article className="stat">
+                <p className="stat-label">平均電價</p>
+                <p className="stat-value">{unitPrice == null ? '—' : money(unitPrice, 2)}</p>
+                <p className="stat-hint">花費 ÷ 度數</p>
+              </article>
+              <article className="stat">
+                <p className="stat-label">每度公里</p>
+                <p className="stat-value">{kmPerKwh == null ? '尚缺里程' : twd(kmPerKwh, 1)}</p>
+                <p className="stat-hint">{kmPerKwh == null ? '充電時記下里程表' : '公里 / 度'}</p>
+              </article>
+            </div>
+
+            <div className="report-block">
+              <h4>品牌花費</h4>
+              <ul className="share-list">
+                {brands.map((row) => {
+                  const share =
+                    brandCost > 0 ? (row.cost / brandCost) * 100 : summary.kWh > 0 ? (row.kWh / summary.kWh) * 100 : 0
+                  return (
+                    <li key={row.provider}>
+                      <div className="share-top">
+                        <span>{providerLabel(row.provider)}</span>
+                        <span>
+                          {money(row.cost)} · {Math.round(share)}%
+                        </span>
+                      </div>
+                      <div className="share-meter" aria-hidden="true">
+                        <span style={{ width: `${share}%` }} />
+                      </div>
+                      <p className="row-meta">
+                        {row.count} 筆 · {kwh(row.kWh)}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <div className="report-block">
+              <h4>充電時段</h4>
+              <ul className="share-list">
+                {habits.bands.map((row) => {
+                  const share = habitKwh > 0 ? (row.kWh / habitKwh) * 100 : 0
+                  return (
+                    <li key={row.id}>
+                      <div className="share-top">
+                        <span>{row.label}</span>
+                        <span>
+                          {row.count} 筆 · {Math.round(share)}%
+                        </span>
+                      </div>
+                      <div className="share-meter" aria-hidden="true">
+                        <span style={{ width: `${share}%` }} />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
           <h3>近半年花費</h3>
         </div>
         <div className="chart-wrap">
@@ -281,6 +376,7 @@ export function OverviewPage() {
                       <p>{label}</p>
                       <p>合計 {money(row.total)}</p>
                       <p>充電 {money(row.charge)}</p>
+                      <p>{kwh(row.kWh)}</p>
                     </div>
                   )
                 }}
@@ -425,6 +521,9 @@ export function OverviewPage() {
                     {formatDateTime(charge.chargedAt)}
                     {charge.location ? ` · ${charge.location}` : ''}
                     {charge.odometerKm != null ? ` · ${charge.odometerKm} km` : ''}
+                    {legs.get(charge.id)
+                      ? ` · 這趟 ${twd(legs.get(charge.id)!.km, 0)} km · ${money(legs.get(charge.id)!.perKm, 2)}/km`
+                      : ''}
                   </p>
                 </div>
                 <div className="row-end">
