@@ -479,7 +479,7 @@ export function OverviewPage() {
               <li>
                 <div>
                   <p className="row-title">貸款利息</p>
-                  <p className="row-meta">依購置頁的借款金額、期數與每月本利拆出，還本不計入</p>
+                  <p className="row-meta">持有年數內的利息計入，還本已在車價裡。之後的本利列在剩餘貸款金額</p>
                 </div>
                 <p className="row-end">{money(detailData.loanInterest)}</p>
               </li>

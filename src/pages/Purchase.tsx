@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Field } from '../components/Field'
 import { useLedger } from '../hooks/useLedger'
-import { monthlyAmortization, loanPlan, purchaseTotal } from '../lib/calc'
+import { loanOwnershipSplit, loanPlan, monthlyAmortization, ownershipMonthCount, purchaseTotal } from '../lib/calc'
 import { money, parseNumber } from '../lib/format'
 import { uid } from '../lib/ids'
 import { EFFICIENCY_BASELINE, type PurchaseItem, type Vehicle } from '../types'
@@ -25,6 +25,8 @@ export function PurchasePage() {
   const plan = loanReady
     ? loanPlan(draft.loanAmount, Math.round(draft.loanMonths), draft.loanPayment, draft.loanStartDate)
     : null
+  const ownedMonths = ownershipMonthCount(draft.ownershipYears)
+  const split = plan && ownedMonths > 0 ? loanOwnershipSplit(plan, ownedMonths) : null
   const today = new Date()
   const currentInstallment = plan?.rows.find(
     (row) => row.year === today.getFullYear() && row.month === today.getMonth(),
@@ -194,7 +196,7 @@ export function PurchasePage() {
           <h3>貸款本利試算</h3>
         </div>
         <p className="lede">
-          填借款金額、期數和每月本利。系統反推利率，拆出每一期的利息和還本。利息會計入持有成本，還本已在車價攤提裡。
+          期數填契約總期數。持有年數裡的每月本利先算出來，利息計入養車成本，還本已在車價攤提裡。持有年數之後剩下的本金和利息，集中成剩餘貸款金額。
         </p>
         <div className="form-grid">
           <Field label="借款金額 NT$">
@@ -251,20 +253,39 @@ export function PurchasePage() {
               </article>
               <article className="stat">
                 <p className="stat-label">本月利息</p>
-                <p className="stat-value">{currentInstallment ? money(currentInstallment.interest) : '—'}</p>
-                <p className="stat-hint">計入持有成本</p>
+                <p className="stat-value">
+                  {currentInstallment && (!split || currentInstallment.index < split.ownedMonths)
+                    ? money(currentInstallment.interest)
+                    : '—'}
+                </p>
+                <p className="stat-hint">持有年數內才計入</p>
               </article>
               <article className="stat">
                 <p className="stat-label">本月還本</p>
                 <p className="stat-value">{currentInstallment ? money(currentInstallment.principal) : '—'}</p>
                 <p className="stat-hint">已含在車價攤提</p>
               </article>
-              <article className="stat">
-                <p className="stat-label">全期利息</p>
-                <p className="stat-value">{money(plan.totalInterest)}</p>
-                <p className="stat-hint">{plan.rows.length} 期合計</p>
-              </article>
             </div>
+            {split ? (
+              <article className="loan-pack">
+                <p className="loan-pack-label">持有 {draft.ownershipYears} 年 · 每月負擔</p>
+                <p className="loan-pack-value">{money(split.monthlyBurden)}</p>
+                <p className="loan-pack-meta">
+                  前 {split.ownedMonths} 期。利息平均 {money(split.monthlyInterest)}，還本平均{' '}
+                  {money(split.monthlyPrincipal)}。利息計入養車成本，還本已在車價攤提。
+                </p>
+              </article>
+            ) : null}
+            {split && split.remainingMonths > 0 ? (
+              <article className="loan-pack is-remainder">
+                <p className="loan-pack-label">剩餘貸款金額</p>
+                <p className="loan-pack-value">{money(split.remainingTotal)}</p>
+                <p className="loan-pack-meta">
+                  剩餘本金 {money(split.remainingPrincipal)} · 剩餘利息 {money(split.remainingInterest)} ·{' '}
+                  {split.remainingMonths} 期。持有年數過了才會碰到，不計入這段養車成本。
+                </p>
+              </article>
+            ) : null}
             <div className="loan-scroll">
               <table className="loan-table">
                 <thead>
@@ -277,7 +298,7 @@ export function PurchasePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {plan.rows.map((row) => (
+                  {(split ? plan.rows.slice(0, split.ownedMonths) : plan.rows).map((row) => (
                     <tr
                       key={row.index}
                       className={
@@ -296,6 +317,9 @@ export function PurchasePage() {
                 </tbody>
               </table>
             </div>
+            {split && split.remainingMonths > 0 ? (
+              <p className="fine">第 {split.ownedMonths + 1} 期以後收在剩餘貸款金額。</p>
+            ) : null}
           </>
         ) : null}
       </section>

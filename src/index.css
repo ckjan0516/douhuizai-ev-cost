@@ -667,6 +667,41 @@ button.stat.is-openable:focus-visible {
   color: var(--amber);
 }
 
+.loan-pack {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--raised);
+  border: 1px solid var(--cable);
+  clip-path: var(--cut);
+}
+
+.loan-pack.is-remainder {
+  border-color: var(--amber);
+}
+
+.loan-pack-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.loan-pack-value {
+  margin-top: 4px;
+  font-family: var(--display);
+  font-size: 32px;
+  letter-spacing: 0.04em;
+}
+
+.loan-pack.is-remainder .loan-pack-value {
+  color: var(--amber);
+}
+
+.loan-pack-meta {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .category-board {
   grid-column: 1 / -1;
   display: grid;

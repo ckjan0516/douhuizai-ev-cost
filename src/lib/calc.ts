@@ -370,6 +370,19 @@ export interface LoanPlan {
   rows: LoanInstallment[]
 }
 
+export interface LoanOwnershipSplit {
+  ownedMonths: number
+  ownedInterest: number
+  ownedPrincipal: number
+  monthlyBurden: number
+  monthlyInterest: number
+  monthlyPrincipal: number
+  remainingMonths: number
+  remainingPrincipal: number
+  remainingInterest: number
+  remainingTotal: number
+}
+
 function annuityPayment(principal: number, monthlyRate: number, months: number): number {
   if (months <= 0) return 0
   if (monthlyRate === 0) return principal / months
@@ -430,10 +443,41 @@ export function vehicleLoanPlan(vehicle: Vehicle): LoanPlan | null {
   return loanPlan(vehicle.loanAmount, vehicle.loanMonths, vehicle.loanPayment, vehicle.loanStartDate)
 }
 
+export function ownershipMonthCount(ownershipYears: number): number {
+  return Math.max(0, Math.round((Number(ownershipYears) || 0) * 12))
+}
+
+export function loanOwnershipSplit(plan: LoanPlan, ownershipMonths: number): LoanOwnershipSplit {
+  const ownedCount = Math.max(0, Math.min(plan.rows.length, Math.round(ownershipMonths)))
+  const owned = plan.rows.slice(0, ownedCount)
+  const rest = plan.rows.slice(ownedCount)
+  const ownedInterest = owned.reduce((sum, row) => sum + row.interest, 0)
+  const ownedPrincipal = owned.reduce((sum, row) => sum + row.principal, 0)
+  const remainingInterest = rest.reduce((sum, row) => sum + row.interest, 0)
+  const remainingPrincipal = rest.reduce((sum, row) => sum + row.principal, 0)
+  const months = owned.length
+  return {
+    ownedMonths: months,
+    ownedInterest,
+    ownedPrincipal,
+    monthlyBurden: months ? Math.round((ownedInterest + ownedPrincipal) / months) : 0,
+    monthlyInterest: months ? ownedInterest / months : 0,
+    monthlyPrincipal: months ? ownedPrincipal / months : 0,
+    remainingMonths: rest.length,
+    remainingPrincipal,
+    remainingInterest,
+    remainingTotal: remainingPrincipal + remainingInterest,
+  }
+}
+
 export function loanInterestForMonth(vehicle: Vehicle, key: MonthKey): number {
   const plan = vehicleLoanPlan(vehicle)
   if (!plan) return 0
-  return plan.rows.find((row) => row.year === key.year && row.month === key.month)?.interest ?? 0
+  const row = plan.rows.find((item) => item.year === key.year && item.month === key.month)
+  if (!row) return 0
+  const ownedMonths = ownershipMonthCount(vehicle.ownershipYears)
+  if (ownedMonths > 0 && row.index >= ownedMonths) return 0
+  return row.interest
 }
 
 export function loanInterestForMonths(vehicle: Vehicle, months: MonthKey[]): number {
