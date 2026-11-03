@@ -1,17 +1,19 @@
 :root {
-  --asphalt: #14120e;
-  --panel: #1f1c16;
-  --raised: #2b261d;
-  --cable: #3a342b;
-  --amber: #e8a04a;
-  --ember: #c46a2a;
-  --paper: #d8cfc0;
-  --muted: #8a8174;
-  --ion: #6a9e96;
-  --danger: #c45c4a;
-  --display: 'Syne', sans-serif;
+  --asphalt: #06080d;
+  --panel: #10141c;
+  --raised: #171d28;
+  --cable: #2a3344;
+  --amber: #5ce1ff;
+  --ember: #1a6f86;
+  --paper: #e8eef8;
+  --muted: #8d99ad;
+  --ion: #7dffe1;
+  --danger: #e31937;
+  --ink: #041016;
+  --display: 'Rajdhani', 'Noto Sans TC', sans-serif;
   --body: 'Noto Sans TC', sans-serif;
-  --mono: 'Chivo Mono', ui-monospace, monospace;
+  --mono: 'Share Tech Mono', ui-monospace, monospace;
+  --cut: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
 }
 
 * {
@@ -28,7 +30,8 @@ body {
   margin: 0;
   color: var(--paper);
   background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(232, 160, 74, 0.08), transparent 50%),
+    radial-gradient(900px 420px at 100% -10%, rgba(92, 225, 255, 0.08), transparent 55%),
+    linear-gradient(180deg, #0a1018 0%, var(--asphalt) 28%),
     var(--asphalt);
   font-family: var(--body);
   line-height: 1.55;
@@ -47,7 +50,8 @@ h2,
 h3 {
   margin: 0;
   font-family: var(--display);
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 p {
@@ -72,7 +76,7 @@ a {
   bottom: 0;
   width: 2px;
   background: linear-gradient(180deg, transparent, var(--ember), var(--amber), var(--ember), transparent);
-  box-shadow: 0 0 12px rgba(232, 160, 74, 0.35);
+  box-shadow: 0 0 16px rgba(92, 225, 255, 0.45);
   pointer-events: none;
 }
 
@@ -94,7 +98,8 @@ a {
 .avatar {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 0;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
 }
 
 .account-name {
@@ -189,7 +194,8 @@ a {
 .stat {
   background: var(--panel);
   border: 1px solid var(--cable);
-  border-radius: 6px;
+  border-radius: 0;
+  clip-path: var(--cut);
 }
 
 .cluster,
@@ -230,14 +236,15 @@ a {
 }
 
 .period-select {
-  border-radius: 999px;
+  border-radius: 0;
   padding: 8px 14px;
   cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 
 .period-select.is-on {
   background: var(--amber);
-  color: #20170d;
+  color: var(--ink);
   border-color: var(--amber);
 }
 
@@ -256,7 +263,7 @@ a {
 }
 
 .custom-range input {
-  border-radius: 4px;
+  border-radius: 0;
   padding: 8px 10px;
   color-scheme: dark;
 }
@@ -266,15 +273,16 @@ a {
   border: 1px solid var(--cable);
   background: var(--raised);
   color: var(--paper);
-  border-radius: 999px;
+  border-radius: 0;
   padding: 8px 14px;
   cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 
 .chip.is-on,
 .btn.primary {
   background: var(--amber);
-  color: #20170d;
+  color: var(--ink);
   border-color: var(--amber);
 }
 
@@ -368,7 +376,7 @@ button.stat.is-openable {
   border: 1px solid var(--cable);
   background: var(--raised);
   color: inherit;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 button.stat.is-openable:hover,
@@ -433,7 +441,7 @@ button.stat.is-openable:focus-visible {
   height: 6px;
   margin-top: 6px;
   background: rgba(232, 160, 74, 0.12);
-  border-radius: 999px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -449,7 +457,7 @@ button.stat.is-openable:focus-visible {
 }
 
 .chart-tip {
-  background: #20170d;
+  background: #071018;
   border: 1px solid var(--cable);
   padding: 8px 10px;
   font-size: 13px;
@@ -518,7 +526,16 @@ button.stat.is-openable:focus-visible {
   padding: 10px 12px;
   border: 1px solid var(--cable);
   border-radius: 4px;
-  background: #17140f;
+  background: var(--raised);
+}
+
+.field input:focus,
+.field select:focus,
+.item-list input:focus,
+.custom-range input:focus,
+.period-select:focus {
+  outline: 1px solid var(--amber);
+  outline-offset: 1px;
 }
 
 .item-list li {
@@ -565,7 +582,7 @@ button.stat.is-openable:focus-visible {
   display: grid;
   place-items: center;
   padding: 20px;
-  z-index: 20;
+  z-index: 40;
 }
 
 .modal {
@@ -573,6 +590,7 @@ button.stat.is-openable:focus-visible {
   padding: 22px;
   background: var(--panel);
   border: 1px solid var(--cable);
+  clip-path: var(--cut);
 }
 
 .scan-meter {
@@ -610,6 +628,53 @@ button.stat.is-openable:focus-visible {
   border: 0;
 }
 
+.category-board {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+}
+
+.category-group {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    rgba(92, 225, 255, 0.03) 3px 4px
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: -22%;
+    z-index: 2;
+    height: 22%;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgba(92, 225, 255, 0.06), transparent);
+    animation: hud-sweep 9s linear infinite;
+  }
+}
+
+@keyframes hud-sweep {
+  to {
+    top: 100%;
+  }
+}
+
 @media (min-width: 720px) {
   .form-grid {
     grid-template-columns: 1fr 1fr;
@@ -630,7 +695,7 @@ button.stat.is-openable:focus-visible {
     margin: 0;
     padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--cable);
-    background: #16130f;
+    background: #070b12;
   }
 
   .shell {

@@ -1,13 +1,35 @@
 export const VEHICLE_ID = 'default'
 
-export const EXPENSE_CATEGORIES = [
-  { id: 'insurance', label: '保險' },
-  { id: 'parking', label: '停車' },
-  { id: 'loan', label: '貸款' },
-  { id: 'subscription', label: '連線訂閱' },
-  { id: 'inspection', label: '驗車' },
-  { id: 'other', label: '其他' },
+export const EXPENSE_GROUPS = [
+  {
+    id: 'keep',
+    label: '固定持有',
+    items: [
+      { id: 'insurance', label: '保險' },
+      { id: 'loan', label: '貸款' },
+      { id: 'subscription', label: '連線訂閱' },
+      { id: 'inspection', label: '驗車' },
+    ],
+  },
+  {
+    id: 'run',
+    label: '日常用車',
+    items: [
+      { id: 'parking', label: '停車' },
+      { id: 'etag', label: 'eTag' },
+      { id: 'wash', label: '洗車' },
+      { id: 'supplies', label: '耗材' },
+      { id: 'maintenance', label: '保養' },
+    ],
+  },
+  {
+    id: 'misc',
+    label: '其他',
+    items: [{ id: 'other', label: '其他' }],
+  },
 ] as const
+
+export const EXPENSE_CATEGORIES = EXPENSE_GROUPS.flatMap((group) => group.items)
 
 export const CHARGE_PROVIDERS = [
   { id: 'evoasis', label: 'EVOASIS' },

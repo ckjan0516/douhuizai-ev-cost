@@ -31,7 +31,7 @@ export function providerLabel(id: ChargeProvider | string): string {
   return CHARGE_PROVIDERS.find((item) => item.id === provider)?.label ?? provider
 }
 
-export function categoryLabel(id: ExpenseCategory): string {
+export function categoryLabel(id: ExpenseCategory | string): string {
   return EXPENSE_CATEGORIES.find((item) => item.id === id)?.label ?? id
 }
 

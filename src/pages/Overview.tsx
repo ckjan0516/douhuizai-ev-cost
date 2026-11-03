@@ -363,11 +363,11 @@ export function OverviewPage() {
         <div className="chart-wrap">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chart} barCategoryGap={16}>
-              <CartesianGrid stroke="rgba(232, 160, 74, 0.08)" vertical={false} />
-              <XAxis dataKey="label" tick={{ fill: '#8a8174', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <CartesianGrid stroke="rgba(92, 225, 255, 0.08)" vertical={false} />
+              <XAxis dataKey="label" tick={{ fill: '#8d99ad', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip
-                cursor={{ fill: 'rgba(232, 160, 74, 0.06)' }}
+                cursor={{ fill: 'rgba(92, 225, 255, 0.06)' }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null
                   const row = payload[0].payload as (typeof chart)[number]
@@ -381,9 +381,9 @@ export function OverviewPage() {
                   )
                 }}
               />
-              <Bar dataKey="amort" stackId="cost" fill="#5c4630" name="攤提" />
-              <Bar dataKey="fixed" stackId="cost" fill="#c46a2a" name="固定" />
-              <Bar dataKey="charge" stackId="cost" fill="#6a9e96" name="充電" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="amort" stackId="cost" fill="#243044" name="攤提" />
+              <Bar dataKey="fixed" stackId="cost" fill="#1a6f86" name="固定" />
+              <Bar dataKey="charge" stackId="cost" fill="#5ce1ff" name="充電" />
             </BarChart>
           </ResponsiveContainer>
         </div>

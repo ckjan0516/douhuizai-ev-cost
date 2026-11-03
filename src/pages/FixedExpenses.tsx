@@ -3,7 +3,7 @@ import { Field } from '../components/Field'
 import { useLedger } from '../hooks/useLedger'
 import { categoryLabel, money, parseNumber, recurrenceLabel } from '../lib/format'
 import { todayISO, uid } from '../lib/ids'
-import { EXPENSE_CATEGORIES, type ExpenseCategory, type FixedExpense, type Recurrence } from '../types'
+import { EXPENSE_GROUPS, type ExpenseCategory, type FixedExpense, type Recurrence } from '../types'
 
 interface ExpenseDraft {
   name: string
@@ -72,7 +72,9 @@ export function FixedExpensesPage() {
       <section className="page-lead">
         <p className="eyebrow">其他</p>
         <h2>每個月都會出現的錢</h2>
-        <p className="lede">保險、停車、貸款、連線訂閱。年繳會自動折成該月負擔；不想再算就填結束日。</p>
+        <p className="lede">
+          固定持有放保險、貸款、訂閱、驗車。日常用車放停車、eTag、洗車、耗材、保養。年繳會折成每月，結束日之後不再計入。
+        </p>
       </section>
 
       <form className="panel form" onSubmit={handleSubmit}>
@@ -84,20 +86,27 @@ export function FixedExpensesPage() {
               placeholder="強制險、月租停車…"
             />
           </Field>
-          <Field label="類別">
-            <select
-              value={draft.category}
-              onChange={(event) =>
-                setDraft({ ...draft, category: event.target.value as ExpenseCategory })
-              }
-            >
-              {EXPENSE_CATEGORIES.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div className="category-board">
+            <p className="field-label">類別</p>
+            {EXPENSE_GROUPS.map((group) => (
+              <div key={group.id}>
+                <p className="category-group">{group.label}</p>
+                <div className="period-switch" role="group" aria-label={group.label}>
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={draft.category === item.id ? 'chip is-on' : 'chip'}
+                      aria-pressed={draft.category === item.id}
+                      onClick={() => setDraft({ ...draft, category: item.id })}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
           <Field label="金額 NT$">
             <input
               inputMode="decimal"
