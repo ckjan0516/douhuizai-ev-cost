@@ -1,35 +1,27 @@
 export const VEHICLE_ID = 'default'
 
-export const EXPENSE_GROUPS = [
-  {
-    id: 'keep',
-    label: '固定持有',
-    items: [
-      { id: 'insurance', label: '保險' },
-      { id: 'loan', label: '貸款' },
-      { id: 'subscription', label: '連線訂閱' },
-      { id: 'inspection', label: '驗車' },
-    ],
-  },
-  {
-    id: 'run',
-    label: '日常用車',
-    items: [
-      { id: 'parking', label: '停車' },
-      { id: 'etag', label: 'eTag' },
-      { id: 'wash', label: '洗車' },
-      { id: 'supplies', label: '耗材' },
-      { id: 'maintenance', label: '保養' },
-    ],
-  },
-  {
-    id: 'misc',
-    label: '其他',
-    items: [{ id: 'other', label: '其他' }],
-  },
+export const EXPENSE_CATEGORIES = [
+  { id: 'insurance', label: '保險', group: '固定持有' },
+  { id: 'loan', label: '貸款', group: '固定持有' },
+  { id: 'subscription', label: '連線訂閱', group: '固定持有' },
+  { id: 'inspection', label: '驗車', group: '固定持有' },
+  { id: 'parking', label: '停車', group: '日常用車' },
+  { id: 'etag', label: 'eTag', group: '日常用車' },
+  { id: 'wash', label: '洗車', group: '日常用車' },
+  { id: 'supplies', label: '耗材', group: '日常用車' },
+  { id: 'maintenance', label: '保養', group: '日常用車' },
+  { id: 'other', label: '其他', group: '其他' },
 ] as const
 
-export const EXPENSE_CATEGORIES = EXPENSE_GROUPS.flatMap((group) => group.items)
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]['id']
+
+const EXPENSE_GROUP_LABELS = ['固定持有', '日常用車', '其他'] as const
+
+export const EXPENSE_GROUPS = EXPENSE_GROUP_LABELS.map((label) => ({
+  id: label,
+  label,
+  items: EXPENSE_CATEGORIES.filter((item) => item.group === label),
+}))
 
 export const CHARGE_PROVIDERS = [
   { id: 'evoasis', label: 'EVOASIS' },
@@ -39,7 +31,6 @@ export const CHARGE_PROVIDERS = [
   { id: 'other', label: '其他' },
 ] as const
 
-export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]['id']
 export type ChargeProvider = (typeof CHARGE_PROVIDERS)[number]['id']
 
 const LEGACY_PROVIDERS: Record<string, ChargeProvider> = {
