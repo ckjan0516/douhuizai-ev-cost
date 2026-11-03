@@ -73,7 +73,7 @@ export function FixedExpensesPage() {
         <p className="eyebrow">其他</p>
         <h2>每個月都會出現的錢</h2>
         <p className="lede">
-          固定持有放保險、貸款、訂閱、驗車。日常用車放停車、eTag、洗車、耗材、保養。年繳會折成每月，結束日之後不再計入。
+          固定持有放保險、貸款以外的訂閱與驗車。貸款利息由購置頁的本利試算自動計入，這裡不要再填整筆月付金。日常用車放停車、eTag、洗車、耗材、保養。
         </p>
       </section>
 

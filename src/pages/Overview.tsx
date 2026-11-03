@@ -23,6 +23,7 @@ import {
   providerShares,
   purchaseTotal,
   summarizePeriod,
+  loanInterestForMonths,
 } from '../lib/calc'
 import {
   categoryLabel,
@@ -65,7 +66,6 @@ export function OverviewPage() {
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const [includePurchase, setIncludePurchase] = useState(false)
   const [detail, setDetail] = useState<'amort' | 'fixed' | 'charge' | null>(null)
   const customRange = { start: customStart, end: customEnd }
 
@@ -88,6 +88,7 @@ export function OverviewPage() {
       monthlyAmort: monthlyAmortization(vehicle),
       purchaseSum: purchaseTotal(vehicle),
       fixedLines: fixedBreakdown(expenses, months),
+      loanInterest: loanInterestForMonths(vehicle, months),
       chargeLines: chargesInRange(charges, range),
     }
   }, [vehicle, expenses, charges, period, customStart, customEnd])
@@ -96,7 +97,7 @@ export function OverviewPage() {
   if (!ready || !vehicle || !summary || !detailData) return <p className="fine">讀取行程電腦…</p>
 
   const recent = charges.slice(0, 4)
-  const shownPerKm = includePurchase ? summary.perKmWithPurchase : summary.perKm
+  const shownPerKm = summary.perKmWithPurchase
   const menuValue = period === 'month' || period === 'all' ? '' : period
   const efficiencyGap =
     summary.whPerKm == null ? null : ((summary.whPerKm - baselineWhPerKm) / baselineWhPerKm) * 100
@@ -185,29 +186,7 @@ export function OverviewPage() {
         </div>
 
         <div className="odometer">
-          <div className="odometer-head">
-            <p className="odometer-label">每公里成本</p>
-            <div className="period-switch" role="tablist" aria-label="每公里成本算法">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!includePurchase}
-                className={includePurchase ? 'chip' : 'chip is-on'}
-                onClick={() => setIncludePurchase(false)}
-              >
-                不含購車攤提
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={includePurchase}
-                className={includePurchase ? 'chip is-on' : 'chip'}
-                onClick={() => setIncludePurchase(true)}
-              >
-                含購車攤提
-              </button>
-            </div>
-          </div>
+          <p className="odometer-label">每公里成本</p>
           {shownPerKm == null ? (
             <p className="odometer-value is-empty">尚缺里程</p>
           ) : (
@@ -221,9 +200,7 @@ export function OverviewPage() {
             {summary.km == null
               ? '充電時記下里程表，就能換算每公里要多少。'
               : `這段期間走了 ${twd(summary.km)} 公里。`}
-            {includePurchase
-              ? ' 目前含購車每月攤提。'
-              : ' 目前不含購車費用；貸款已算在固定支出。'}
+            {' 含購車攤提與貸款利息。還本已在車價裡。'}
           </p>
         </div>
 
@@ -481,7 +458,7 @@ export function OverviewPage() {
         total={`${detailData.months} 個月合計 ${money(summary.fixed)}`}
         onClose={() => setDetail(null)}
       >
-        {detailData.fixedLines.length === 0 ? (
+        {detailData.fixedLines.length === 0 && detailData.loanInterest <= 0 ? (
           <p className="empty">這段期間沒有固定支出。</p>
         ) : (
           <ul className="timeline">
@@ -498,6 +475,15 @@ export function OverviewPage() {
                 <p className="row-end">{money(amount)}</p>
               </li>
             ))}
+            {detailData.loanInterest > 0 ? (
+              <li>
+                <div>
+                  <p className="row-title">貸款利息</p>
+                  <p className="row-meta">依購置頁的借款金額、期數與每月本利拆出，還本不計入</p>
+                </div>
+                <p className="row-end">{money(detailData.loanInterest)}</p>
+              </li>
+            ) : null}
           </ul>
         )}
       </BreakdownDialog>

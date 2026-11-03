@@ -71,6 +71,10 @@ export interface Vehicle {
   residualValue: number
   startOdometer: number
   electricityRateHome: number
+  loanAmount: number
+  loanMonths: number
+  loanPayment: number
+  loanStartDate: string
 }
 
 export interface FixedExpense {

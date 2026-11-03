@@ -284,7 +284,9 @@ export function summarizePeriod(
   const months = monthsInRange(range.start, range.end)
   const amortEach = monthlyAmortization(vehicle)
   const amort = amortEach * months.length
-  const fixed = months.reduce((sum, month) => sum + fixedCostForMonth(expenses, month), 0)
+  const fixed =
+    months.reduce((sum, month) => sum + fixedCostForMonth(expenses, month), 0) +
+    loanInterestForMonths(vehicle, months)
   const charge = chargeCostInRange(charges, range)
   const chargedKwh = chargeKwhInRange(charges, range)
   const total = amort + fixed + charge
@@ -322,7 +324,9 @@ export function monthlySeries(
     const range = { start, end }
     const owned = cursor >= purchaseMonth
     const amort = owned ? monthlyAmortization(vehicle) : 0
-    const fixed = owned ? fixedCostForMonth(expenses, key) : 0
+    const fixed = owned
+      ? fixedCostForMonth(expenses, key) + loanInterestForMonth(vehicle, key)
+      : 0
     const charge = chargeCostInRange(charges, range)
     const chargedKwh = chargeKwhInRange(charges, range)
     const total = amort + fixed + charge
@@ -348,6 +352,92 @@ export function monthlySeries(
 
 export function homeChargeAmount(kWh: number, rate: number): number {
   return Math.round(kWh * rate * 100) / 100
+}
+
+export interface LoanInstallment {
+  index: number
+  year: number
+  month: number
+  interest: number
+  principal: number
+  balance: number
+}
+
+export interface LoanPlan {
+  monthlyRate: number
+  annualRate: number
+  totalInterest: number
+  rows: LoanInstallment[]
+}
+
+function annuityPayment(principal: number, monthlyRate: number, months: number): number {
+  if (months <= 0) return 0
+  if (monthlyRate === 0) return principal / months
+  const growth = (1 + monthlyRate) ** months
+  return (principal * monthlyRate * growth) / (growth - 1)
+}
+
+export function solveMonthlyRate(principal: number, payment: number, months: number): number | null {
+  if (principal <= 0 || payment <= 0 || months <= 0) return null
+  const interestOnly = principal / months
+  if (payment + 0.5 < interestOnly) return null
+  if (Math.abs(payment - interestOnly) < 0.5) return 0
+  let low = 0
+  let high = 0.2
+  if (annuityPayment(principal, high, months) < payment) return null
+  for (let step = 0; step < 80; step += 1) {
+    const mid = (low + high) / 2
+    if (annuityPayment(principal, mid, months) > payment) high = mid
+    else low = mid
+  }
+  return (low + high) / 2
+}
+
+export function loanPlan(
+  amount: number,
+  months: number,
+  payment: number,
+  startDate: string,
+): LoanPlan | null {
+  const monthlyRate = solveMonthlyRate(amount, payment, months)
+  if (monthlyRate == null || !startDate) return null
+  const start = parseDateOnly(startDate)
+  let balance = amount
+  const rows: LoanInstallment[] = []
+  let totalInterest = 0
+  for (let index = 0; index < months; index += 1) {
+    const cursor = new Date(start.getFullYear(), start.getMonth() + index, 1)
+    const interest = Math.round(balance * monthlyRate)
+    const principalPaid = index === months - 1 ? Math.round(balance) : Math.round(payment - interest)
+    balance = Math.max(0, Math.round((balance - principalPaid) * 100) / 100)
+    totalInterest += interest
+    rows.push({
+      index,
+      year: cursor.getFullYear(),
+      month: cursor.getMonth(),
+      interest,
+      principal: principalPaid,
+      balance,
+    })
+  }
+  return { monthlyRate, annualRate: monthlyRate * 12, totalInterest, rows }
+}
+
+export function vehicleLoanPlan(vehicle: Vehicle): LoanPlan | null {
+  if (!vehicle.loanAmount || !vehicle.loanMonths || !vehicle.loanPayment || !vehicle.loanStartDate) {
+    return null
+  }
+  return loanPlan(vehicle.loanAmount, vehicle.loanMonths, vehicle.loanPayment, vehicle.loanStartDate)
+}
+
+export function loanInterestForMonth(vehicle: Vehicle, key: MonthKey): number {
+  const plan = vehicleLoanPlan(vehicle)
+  if (!plan) return 0
+  return plan.rows.find((row) => row.year === key.year && row.month === key.month)?.interest ?? 0
+}
+
+export function loanInterestForMonths(vehicle: Vehicle, months: MonthKey[]): number {
+  return months.reduce((sum, month) => sum + loanInterestForMonth(vehicle, month), 0)
 }
 
 function parseDateOnly(value: string): Date {

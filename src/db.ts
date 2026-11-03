@@ -30,6 +30,20 @@ export function defaultVehicle(): Vehicle {
     residualValue: 0,
     startOdometer: 0,
     electricityRateHome: 3.5,
+    loanAmount: 0,
+    loanMonths: 0,
+    loanPayment: 0,
+    loanStartDate: '',
+  }
+}
+
+export function normalizeVehicle(vehicle: Vehicle): Vehicle {
+  return {
+    ...vehicle,
+    loanAmount: Number(vehicle.loanAmount) || 0,
+    loanMonths: Number(vehicle.loanMonths) || 0,
+    loanPayment: Number(vehicle.loanPayment) || 0,
+    loanStartDate: vehicle.loanStartDate || '',
   }
 }
 

@@ -6,7 +6,7 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore'
-import { defaultVehicle } from '../db'
+import { defaultVehicle, normalizeVehicle } from '../db'
 import { VEHICLE_ID, normalizeProvider, type ChargeSession, type FixedExpense, type Vehicle } from '../types'
 import { cloudDb } from './firebase'
 
@@ -51,7 +51,7 @@ export async function hasCloudLedger(uid: string): Promise<boolean> {
 
 export async function loadVehicle(uid: string): Promise<Vehicle | null> {
   const snap = await getDocFromServer(vehicleRef(uid))
-  return snap.exists() ? (snap.data() as Vehicle) : null
+  return snap.exists() ? normalizeVehicle(snap.data() as Vehicle) : null
 }
 
 export async function saveVehicleCloud(uid: string, vehicle: Vehicle): Promise<void> {

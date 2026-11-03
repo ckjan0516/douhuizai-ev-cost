@@ -628,6 +628,45 @@ button.stat.is-openable:focus-visible {
   border: 0;
 }
 
+.loan-scroll {
+  max-height: 320px;
+  margin-top: 14px;
+  overflow: auto;
+}
+
+.loan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.loan-table th,
+.loan-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--cable);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.loan-table th:first-child,
+.loan-table td:first-child,
+.loan-table th:nth-child(2),
+.loan-table td:nth-child(2) {
+  text-align: left;
+}
+
+.loan-table th {
+  color: var(--muted);
+  font-family: var(--body);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.loan-table tr.is-now td {
+  color: var(--amber);
+}
+
 .category-board {
   grid-column: 1 / -1;
   display: grid;
