@@ -508,6 +508,50 @@ button.stat.is-openable:focus-visible {
   font-weight: 700;
 }
 
+.charge-when {
+  font-family: var(--mono);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.charge-mark {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--cable);
+  color: var(--ion);
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  vertical-align: 1px;
+}
+
+.charge-mark.is-review {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.trend-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.trend-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  background: var(--amber);
+  vertical-align: 0;
+}
+
+.trend-legend i.is-out {
+  background: var(--danger);
+}
+
 .row-end {
   text-align: right;
   font-family: var(--mono);

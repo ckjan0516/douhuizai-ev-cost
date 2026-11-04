@@ -17,6 +17,7 @@ interface ChargeFormProps {
   initial?: ChargeDraft
   editing?: ChargeSession | null
   onCancel?: () => void
+  onDelete?: () => Promise<void>
   onSave: (charge: ChargeSession) => Promise<void>
 }
 
@@ -36,7 +37,7 @@ function withNormalizedProvider(draft: ChargeDraft): ChargeDraft {
   return { ...draft, provider: normalizeProvider(draft.provider) }
 }
 
-export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: ChargeFormProps) {
+export function ChargeForm({ vehicle, initial, editing, onCancel, onDelete, onSave }: ChargeFormProps) {
   const [draft, setDraft] = useState<ChargeDraft>(withNormalizedProvider(initial ?? emptyDraft()))
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -181,6 +182,19 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
         {onCancel ? (
           <button type="button" className="btn ghost" onClick={onCancel}>
             取消
+          </button>
+        ) : null}
+        {onDelete ? (
+          <button
+            type="button"
+            className="btn ghost"
+            disabled={busy}
+            onClick={() => {
+              if (!window.confirm('刪掉這筆充電紀錄？')) return
+              void onDelete()
+            }}
+          >
+            刪除這筆
           </button>
         ) : null}
         <button type="submit" className="btn primary" disabled={busy}>

@@ -371,6 +371,101 @@ export function chargeLegs(charges: ChargeSession[]): Map<string, ChargeLeg> {
   return legs
 }
 
+export type ChargeTrendMetric = 'unit' | 'perKm' | 'wh'
+
+export const CHARGE_TREND_METRICS: { id: ChargeTrendMetric; label: string; unit: string }[] = [
+  { id: 'unit', label: '單價', unit: '元/度' },
+  { id: 'perKm', label: '每公里電費', unit: '元/km' },
+  { id: 'wh', label: '電耗', unit: 'Wh/km' },
+]
+
+export interface ChargeTrendPoint {
+  id: string
+  at: string
+  label: string
+  value: number
+  outlier: boolean
+  reason: string
+}
+
+function quartile(sorted: number[], portion: number): number {
+  if (sorted.length === 0) return 0
+  const index = (sorted.length - 1) * portion
+  const lower = Math.floor(index)
+  const upper = Math.ceil(index)
+  if (lower === upper) return sorted[lower]
+  const weight = index - lower
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight
+}
+
+function iqrOutlierFlags(values: number[]): boolean[] {
+  const flags = values.map(() => false)
+  if (values.length < 4) return flags
+  const sorted = values.slice().sort((a, b) => a - b)
+  const q1 = quartile(sorted, 0.25)
+  const q3 = quartile(sorted, 0.75)
+  const span = q3 - q1
+  const low = q1 - span * 1.5
+  const high = q3 + span * 1.5
+  values.forEach((value, index) => {
+    if (value < low || value > high) flags[index] = true
+  })
+  return flags
+}
+
+function trendLabel(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
+export function chargeTrend(
+  charges: ChargeSession[],
+  legs: Map<string, ChargeLeg>,
+  metric: ChargeTrendMetric,
+): ChargeTrendPoint[] {
+  const ordered = charges
+    .slice()
+    .sort((a, b) => new Date(a.chargedAt).getTime() - new Date(b.chargedAt).getTime())
+  const drafted: Array<Omit<ChargeTrendPoint, 'outlier' | 'reason'> & { tariffOff: boolean }> = []
+  for (const charge of ordered) {
+    if (metric === 'unit') {
+      if (!(charge.kWh > 0)) continue
+      drafted.push({
+        id: charge.id,
+        at: charge.chargedAt,
+        label: trendLabel(charge.chargedAt),
+        value: charge.costTwd / charge.kWh,
+        tariffOff: evoasisRateMatch(charge)?.needsReview ?? false,
+      })
+      continue
+    }
+    const leg = legs.get(charge.id)
+    if (!leg) continue
+    drafted.push({
+      id: charge.id,
+      at: charge.chargedAt,
+      label: trendLabel(charge.chargedAt),
+      value: metric === 'perKm' ? leg.perKm : leg.whPerKm,
+      tariffOff: false,
+    })
+  }
+  const flags = iqrOutlierFlags(drafted.map((point) => point.value))
+  return drafted.map((point, index) => {
+    const spread = flags[index]
+    const outlier = point.tariffOff || spread
+    const reason = point.tariffOff ? '對不上夜貓、離峰或假日' : spread ? '偏離這批紀錄的常見範圍' : ''
+    return {
+      id: point.id,
+      at: point.at,
+      label: point.label,
+      value: point.value,
+      outlier,
+      reason,
+    }
+  })
+}
+
 export function kmInRange(
   vehicle: Vehicle,
   charges: ChargeSession[],
