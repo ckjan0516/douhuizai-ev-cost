@@ -172,7 +172,7 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
       {evoasisPreview ? (
         <p className={evoasisPreview.needsReview ? 'alert' : 'fine'}>
           {evoasisPreview.needsReview
-            ? `${describeEvoasisRate(evoasisPreview)}。請核對金額和度數，這筆先不計入夜貓或離峰的每公里電費。`
+            ? `${describeEvoasisRate(evoasisPreview)}。請核對金額和度數，這筆先不計入夜貓、離峰或假日的每公里電費。`
             : `這筆歸在${describeEvoasisRate(evoasisPreview)}。`}
         </p>
       ) : null}

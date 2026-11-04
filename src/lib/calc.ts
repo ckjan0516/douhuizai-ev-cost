@@ -192,9 +192,19 @@ export function averageUnitPrice(charges: ChargeSession[]): number | null {
 export const EVOASIS_RATES = [
   { id: 'night', label: '夜貓', rate: 5.31 },
   { id: 'offpeak', label: '離峰', rate: 5.85 },
+  { id: 'holiday', label: '假日', rate: 6.3 },
 ] as const
 
 export const EVOASIS_RATE_TOLERANCE = 0.15
+
+function evoasisRoundingCap(): number {
+  const rates = EVOASIS_RATES.map((item) => item.rate).sort((a, b) => a - b)
+  let halfGap = Number.POSITIVE_INFINITY
+  for (let index = 1; index < rates.length; index += 1) {
+    halfGap = Math.min(halfGap, (rates[index] - rates[index - 1]) / 2)
+  }
+  return Math.max(EVOASIS_RATE_TOLERANCE, halfGap - 0.01)
+}
 
 export type EvoasisRateId = (typeof EVOASIS_RATES)[number]['id']
 
@@ -223,7 +233,7 @@ export function evoasisRateMatch(
       distance = gap
     }
   }
-  const roundingSlack = Math.min(0.27, 0.5 / charge.kWh)
+  const roundingSlack = Math.min(evoasisRoundingCap(), 0.5 / charge.kWh)
   const needsReview = distance > Math.max(EVOASIS_RATE_TOLERANCE, roundingSlack)
   return {
     unitPrice,

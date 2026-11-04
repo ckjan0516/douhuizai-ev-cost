@@ -291,7 +291,7 @@ export function OverviewPage() {
               <div className="report-block">
                 <h4>EVOASIS 費率</h4>
                 <p className="fine">
-                  金額 ÷ 度數，靠近 5.31 為夜貓、靠近 5.85 為離峰。每公里電費按費率分開算。
+                  金額 ÷ 度數，靠近 5.31 為夜貓、靠近 5.85 為離峰、靠近 6.30 為假日。每公里電費按費率分開算。
                 </p>
                 <ul className="share-list">
                   {evoasis.buckets.map((row) => {
@@ -335,7 +335,7 @@ export function OverviewPage() {
                         </li>
                       ))}
                     </ul>
-                    <p className="fine">這些差額明顯，先不要混進夜貓或離峰。到充電頁打開該筆核對後再存。</p>
+                    <p className="fine">這些差額明顯，先不要混進夜貓、離峰或假日。到充電頁打開該筆核對後再存。</p>
                   </>
                 ) : null}
               </div>
