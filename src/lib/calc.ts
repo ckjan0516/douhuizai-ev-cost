@@ -376,7 +376,7 @@ export type ChargeTrendMetric = 'unit' | 'perKm' | 'wh'
 export const CHARGE_TREND_METRICS: { id: ChargeTrendMetric; label: string; unit: string }[] = [
   { id: 'unit', label: '單價', unit: '元/度' },
   { id: 'perKm', label: '每公里電費', unit: '元/km' },
-  { id: 'wh', label: '電耗', unit: 'Wh/km' },
+  { id: 'wh', label: '每公里電耗', unit: 'Wh/km' },
 ]
 
 export interface ChargeTrendPoint {
@@ -575,6 +575,43 @@ export function monthlySeries(
     })
   }
   return series
+}
+
+export function ownershipCostTrend(
+  vehicle: Vehicle,
+  expenses: FixedExpense[],
+  charges: ChargeSession[],
+  now = new Date(),
+): ChargeTrendPoint[] {
+  const purchased = parseDateOnly(vehicle.purchaseDate)
+  const start = new Date(purchased.getFullYear(), purchased.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth(), 1)
+  const drafted: Array<Omit<ChargeTrendPoint, 'outlier' | 'reason'>> = []
+  for (let cursor = new Date(start); cursor <= end; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
+    const key = { year: cursor.getFullYear(), month: cursor.getMonth() }
+    const range = {
+      start: new Date(key.year, key.month, 1),
+      end: new Date(key.year, key.month + 1, 1),
+    }
+    const total =
+      monthlyAmortization(vehicle) +
+      fixedCostForMonth(expenses, key) +
+      loanInterestForMonth(vehicle, key) +
+      chargeCostInRange(charges, range)
+    drafted.push({
+      id: `${key.year}-${key.month}`,
+      at: range.start.toISOString(),
+      label: `${String(key.year).slice(2)}/${key.month + 1}`,
+      value: total,
+      weight: 1,
+    })
+  }
+  const flags = iqrOutlierFlags(drafted.map((point) => point.value))
+  return drafted.map((point, index) => ({
+    ...point,
+    outlier: flags[index],
+    reason: flags[index] ? '偏離這批月份的常見範圍' : '',
+  }))
 }
 
 export function homeChargeAmount(kWh: number, rate: number): number {

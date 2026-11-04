@@ -6,6 +6,7 @@ import { SignIn } from './SignIn'
 const links = [
   { to: '/', label: '總覽', end: true },
   { to: '/charges', label: '充電' },
+  { to: '/stats', label: '統計' },
   { to: '/fixed', label: '其他' },
   { to: '/purchase', label: '購置' },
   { to: '/backup', label: '備份' },

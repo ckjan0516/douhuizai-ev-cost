@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { ChargeForm, emptyDraft } from '../components/ChargeForm'
-import { ChargeTrendDialog } from '../components/ChargeTrendDialog'
 import { useLedger } from '../hooks/useLedger'
 import { chargeLegs, evoasisRateMatch } from '../lib/calc'
 import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal, twd } from '../lib/format'
@@ -16,7 +15,6 @@ function rateMark(charge: ChargeSession): { text: string; review: boolean } | nu
 export function ChargesPage() {
   const { vehicle, charges, ready, error, upsertCharge, removeCharge } = useLedger()
   const [mode, setMode] = useState<'idle' | 'manual' | 'edit'>('idle')
-  const [chartOpen, setChartOpen] = useState(false)
   const [draft, setDraft] = useState<ChargeDraft>(emptyDraft())
   const [editing, setEditing] = useState<ChargeSession | null>(null)
 
@@ -33,7 +31,6 @@ export function ChargesPage() {
   }
 
   function openEdit(charge: ChargeSession) {
-    setChartOpen(false)
     setEditing(charge)
     setDraft({
       chargedAt: toDateTimeLocal(charge.chargedAt),
@@ -54,12 +51,9 @@ export function ChargesPage() {
         <h2>每一次補能</h2>
       </section>
 
-        <div className={mode === 'idle' ? 'actions dock-actions' : 'actions'}>
+      <div className={mode === 'idle' ? 'actions dock-actions' : 'actions'}>
         <button type="button" className="btn primary" onClick={openManual}>
           手打一筆
-        </button>
-        <button type="button" className="btn ghost" onClick={() => setChartOpen(true)} disabled={charges.length === 0}>
-          統計圖
         </button>
       </div>
 
@@ -126,14 +120,6 @@ export function ChargesPage() {
           })}
         </ul>
       )}
-
-      <ChargeTrendDialog
-        open={chartOpen}
-        charges={charges}
-        legs={legs}
-        onClose={() => setChartOpen(false)}
-        onOpenCharge={openEdit}
-      />
     </div>
   )
 }

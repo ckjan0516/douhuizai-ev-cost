@@ -6,6 +6,7 @@ import { ChargesPage } from './pages/Charges'
 import { FixedExpensesPage } from './pages/FixedExpenses'
 import { OverviewPage } from './pages/Overview'
 import { PurchasePage } from './pages/Purchase'
+import { StatsPage } from './pages/Stats'
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<OverviewPage />} />
             <Route path="charges" element={<ChargesPage />} />
+            <Route path="stats" element={<StatsPage />} />
             <Route path="fixed" element={<FixedExpensesPage />} />
             <Route path="other" element={<Navigate to="/fixed" replace />} />
             <Route path="purchase" element={<PurchasePage />} />

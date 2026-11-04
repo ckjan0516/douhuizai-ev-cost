@@ -849,7 +849,7 @@ body::before {
     bottom: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0;
     margin: 0;
     overflow: visible;
@@ -865,7 +865,7 @@ body::before {
     min-height: 48px;
     place-items: center;
     padding: 6px 0;
-    font-size: 14px;
+    font-size: 13px;
     text-align: center;
     border-bottom: 0;
   }
@@ -932,7 +932,7 @@ body::before {
     bottom: calc(56px + env(safe-area-inset-bottom));
     z-index: 28;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     margin: 0;
     padding: 8px 14px;
     background: #070b12;

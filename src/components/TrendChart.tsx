@@ -1,81 +1,45 @@
 import { useMemo, useState } from 'react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import {
-  CHARGE_TREND_METRICS,
-  chargeTrend,
-  chargeTrendAverage,
-  type ChargeLeg,
-  type ChargeTrendMetric,
-  type ChargeTrendPoint,
-} from '../lib/calc'
-import { formatDateTime, money, providerLabel, twd } from '../lib/format'
-import type { ChargeSession } from '../types'
-import { BreakdownDialog } from './BreakdownDialog'
+import { chargeTrendAverage, type ChargeTrendPoint } from '../lib/calc'
+import { money, twd } from '../lib/format'
 
-interface ChargeTrendDialogProps {
-  open: boolean
-  charges: ChargeSession[]
-  legs: Map<string, ChargeLeg>
-  onClose: () => void
-  onOpenCharge: (charge: ChargeSession) => void
+interface TrendChartProps {
+  points: ChargeTrendPoint[]
+  unit: string
+  digits: number
+  asMoney: boolean
+  weightHint: string
+  emptyText: string
+  caption: (point: ChargeTrendPoint) => string
 }
 
 function TrendDot(props: { cx?: number; cy?: number; payload?: ChargeTrendPoint }) {
   const { cx, cy, payload } = props
   if (cx == null || cy == null || !payload) return null
-  return (
-    <circle cx={cx} cy={cy} r={payload.outlier ? 5.5 : 3} fill={payload.outlier ? '#e31937' : '#5ce1ff'} />
-  )
+  return <circle cx={cx} cy={cy} r={payload.outlier ? 5.5 : 3} fill={payload.outlier ? '#e31937' : '#5ce1ff'} />
 }
 
-export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }: ChargeTrendDialogProps) {
-  const [metric, setMetric] = useState<ChargeTrendMetric>('unit')
+function formatPoint(value: number, digits: number, asMoney: boolean): string {
+  return asMoney ? money(value, digits) : twd(value, digits)
+}
+
+export function TrendChart({ points, unit, digits, asMoney, weightHint, emptyText, caption }: TrendChartProps) {
   const [includeOutliers, setIncludeOutliers] = useState(false)
-  const metricMeta = CHARGE_TREND_METRICS.find((item) => item.id === metric) ?? CHARGE_TREND_METRICS[0]
-  const points = useMemo(() => chargeTrend(charges, legs, metric), [charges, legs, metric])
-  const average = useMemo(
-    () => chargeTrendAverage(points, includeOutliers),
-    [points, includeOutliers],
-  )
+  const average = useMemo(() => chargeTrendAverage(points, includeOutliers), [points, includeOutliers])
   const counted = includeOutliers ? points.length : points.filter((point) => !point.outlier).length
   const outliers = points.filter((point) => point.outlier)
   const chartPoints = points.map((point) => ({ ...point, average }))
-  const byId = useMemo(() => new Map(charges.map((charge) => [charge.id, charge])), [charges])
 
   return (
-    <BreakdownDialog
-      open={open}
-      eyebrow="統計"
-      title="充電趨勢"
-      total="由左到右是時間先後。紅點是離群值。"
-      onClose={onClose}
-    >
-      <div className="mini-actions">
-        {CHARGE_TREND_METRICS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={item.id === metric ? 'chip is-on' : 'chip'}
-            onClick={() => setMetric(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+    <section className="panel">
       <div className="trend-average">
         <p className="stat-label">平均</p>
-        <p className="stat-value ion">
-          {average == null
-            ? '—'
-            : metric === 'perKm'
-              ? money(average, 2)
-              : twd(average, metric === 'unit' ? 2 : 0)}
-        </p>
+        <p className="stat-value ion">{average == null ? '—' : formatPoint(average, digits, asMoney)}</p>
       </div>
       <p className="fine">
         {average == null
           ? '沒有可計算的一般紀錄。'
-          : `${includeOutliers ? '含離群值' : '不含離群值'} · ${counted} 筆 · ${metric === 'unit' ? '依度數加權' : '依里程加權'} · ${metricMeta.unit}`}
+          : `${includeOutliers ? '含離群值' : '不含離群值'} · ${counted} 筆 · ${weightHint} · ${unit}`}
       </p>
       <div className="mini-actions trend-toggle">
         <button
@@ -94,11 +58,7 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
         </button>
       </div>
       {points.length < 2 ? (
-        <p className="empty">
-          {metric === 'unit'
-            ? '至少兩筆有度數的紀錄，才畫得出單價趨勢。'
-            : '至少兩筆有前後里程的紀錄，才畫得出這張圖。'}
-        </p>
+        <p className="empty">{emptyText}</p>
       ) : (
         <div className="chart-wrap">
           <ResponsiveContainer width="100%" height={220}>
@@ -112,11 +72,11 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
                 interval="preserveStartEnd"
               />
               <YAxis
-                width={42}
+                width={asMoney ? 56 : 42}
                 tick={{ fill: '#8d99ad', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value: number) => twd(value, metric === 'unit' ? 1 : 0)}
+                tickFormatter={(value: number) => twd(value, digits > 0 ? 1 : 0)}
               />
               <Tooltip
                 cursor={{ stroke: 'rgba(92, 225, 255, 0.35)' }}
@@ -124,13 +84,11 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
                   if (!active || !payload?.length) return null
                   const row = payload.find((item) => item.dataKey === 'value') ?? payload[0]
                   const point = row.payload as ChargeTrendPoint
-                  const charge = byId.get(point.id)
                   return (
                     <div className="chart-tip">
-                      <p>{charge ? formatDateTime(charge.chargedAt) : point.label}</p>
+                      <p>{caption(point)}</p>
                       <p>
-                        {metric === 'perKm' ? money(point.value, 2) : twd(point.value, metric === 'unit' ? 2 : 0)}{' '}
-                        {metricMeta.unit}
+                        {formatPoint(point.value, digits, asMoney)} {unit}
                       </p>
                       {point.outlier ? <p className="is-review">離群 · {point.reason}</p> : null}
                     </div>
@@ -178,30 +136,22 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
       </p>
       {outliers.length > 0 ? (
         <ul className="timeline">
-          {outliers.map((point) => {
-            const charge = byId.get(point.id)
-            if (!charge) return null
-            return (
-              <li key={point.id}>
-                <button type="button" className="timeline-main" onClick={() => onOpenCharge(charge)}>
-                  <div>
-                    <p className="row-title is-review">{point.reason}</p>
-                    <p className="row-meta">
-                      {formatDateTime(charge.chargedAt)} · {providerLabel(charge.provider)}
-                    </p>
-                  </div>
-                  <div className="row-end">
-                    <p>{metric === 'perKm' ? money(point.value, 2) : twd(point.value, metric === 'unit' ? 2 : 0)}</p>
-                    <p className="row-meta">{metricMeta.unit}</p>
-                  </div>
-                </button>
-              </li>
-            )
-          })}
+          {outliers.map((point) => (
+            <li key={point.id}>
+              <div>
+                <p className="row-title is-review">{point.reason}</p>
+                <p className="row-meta">{caption(point)}</p>
+              </div>
+              <div className="row-end">
+                <p>{formatPoint(point.value, digits, asMoney)}</p>
+                <p className="row-meta">{unit}</p>
+              </div>
+            </li>
+          ))}
         </ul>
       ) : points.length >= 2 ? (
         <p className="fine">這批紀錄沒有離群值。</p>
       ) : null}
-    </BreakdownDialog>
+    </section>
   )
 }
