@@ -88,8 +88,6 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onDelete, onSa
         costTwd: cost,
         odometerKm: odometer ?? undefined,
         source: draft.source,
-        photoBlob: draft.photoBlob ?? editing?.photoBlob,
-        ocrRawText: draft.ocrRawText,
         createdAt: editing?.createdAt ?? new Date().toISOString(),
       })
       if (!editing) setDraft(emptyDraft())
@@ -161,15 +159,6 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onDelete, onSa
           />
         </Field>
       </div>
-      {draft.photoBlob ? (
-        <p className="fine">照片只用來辨識。記入後只留下金額、度數與時間。</p>
-      ) : null}
-      {draft.ocrRawText ? (
-        <details className="ocr-raw">
-          <summary>辨識原文</summary>
-          <pre>{draft.ocrRawText}</pre>
-        </details>
-      ) : null}
       {evoasisPreview ? (
         <p className={evoasisPreview.needsReview ? 'alert' : 'fine'}>
           {evoasisPreview.needsReview

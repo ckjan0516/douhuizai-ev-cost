@@ -111,6 +111,4 @@ export interface ChargeDraft {
   costTwd: string
   odometerKm: string
   source: ChargeSource
-  photoBlob?: Blob
-  ocrRawText?: string
 }

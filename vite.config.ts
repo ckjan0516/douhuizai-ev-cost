@@ -4,7 +4,4 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: './',
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['tesseract.js'],
-  },
 })

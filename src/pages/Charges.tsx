@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ChargeForm, emptyDraft } from '../components/ChargeForm'
 import { ChargeTrendDialog } from '../components/ChargeTrendDialog'
-import { ScanDialog } from '../components/ScanDialog'
 import { useLedger } from '../hooks/useLedger'
 import { chargeLegs, evoasisRateMatch } from '../lib/calc'
 import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal, twd } from '../lib/format'
@@ -17,11 +16,9 @@ function rateMark(charge: ChargeSession): { text: string; review: boolean } | nu
 export function ChargesPage() {
   const { vehicle, charges, ready, error, upsertCharge, removeCharge } = useLedger()
   const [mode, setMode] = useState<'idle' | 'manual' | 'edit'>('idle')
-  const [scanOpen, setScanOpen] = useState(false)
   const [chartOpen, setChartOpen] = useState(false)
   const [draft, setDraft] = useState<ChargeDraft>(emptyDraft())
   const [editing, setEditing] = useState<ChargeSession | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
 
   const legs = useMemo(() => chargeLegs(charges), [charges])
   const editingLeg = editing ? legs.get(editing.id) : undefined
@@ -33,7 +30,6 @@ export function ChargesPage() {
     setEditing(null)
     setDraft(emptyDraft())
     setMode('manual')
-    setPreview(null)
   }
 
   function openEdit(charge: ChargeSession) {
@@ -47,17 +43,8 @@ export function ChargesPage() {
       costTwd: String(charge.costTwd),
       odometerKm: charge.odometerKm != null ? String(charge.odometerKm) : '',
       source: charge.source,
-      photoBlob: charge.photoBlob,
-      ocrRawText: charge.ocrRawText,
     })
     setMode('edit')
-    if (charge.photoBlob) {
-      setPreview(URL.createObjectURL(charge.photoBlob))
-    } else if (charge.photoUrl) {
-      setPreview(charge.photoUrl)
-    } else {
-      setPreview(null)
-    }
   }
 
   return (
@@ -74,9 +61,6 @@ export function ChargesPage() {
         <button type="button" className="btn ghost" onClick={() => setChartOpen(true)} disabled={charges.length === 0}>
           統計圖
         </button>
-        <button type="button" className="btn ghost" onClick={() => setScanOpen(true)}>
-          掃描充電單
-        </button>
       </div>
 
       {mode !== 'idle' ? (
@@ -87,7 +71,6 @@ export function ChargesPage() {
           onCancel={() => {
             setMode('idle')
             setEditing(null)
-            setPreview(null)
           }}
           onDelete={
             editing
@@ -95,7 +78,6 @@ export function ChargesPage() {
                   await removeCharge(editing.id)
                   setMode('idle')
                   setEditing(null)
-                  setPreview(null)
                 }
               : undefined
           }
@@ -103,7 +85,6 @@ export function ChargesPage() {
             await upsertCharge(charge)
             setMode('idle')
             setEditing(null)
-            setPreview(null)
           }}
         />
       ) : null}
@@ -113,8 +94,6 @@ export function ChargesPage() {
           這趟 {twd(editingLeg.km)} km · {money(editingLeg.perKm, 2)}/km
         </p>
       ) : null}
-
-      {preview && mode === 'edit' ? <img className="receipt-preview" src={preview} alt="充電單" /> : null}
 
       {charges.length === 0 ? (
         <p className="empty">還沒有充電紀錄。先手打度數、金額和里程。</p>
@@ -154,17 +133,6 @@ export function ChargesPage() {
         legs={legs}
         onClose={() => setChartOpen(false)}
         onOpenCharge={openEdit}
-      />
-
-      <ScanDialog
-        open={scanOpen}
-        onClose={() => setScanOpen(false)}
-        onDraft={(next) => {
-          setEditing(null)
-          setDraft(next)
-          setMode('manual')
-          setPreview(next.photoBlob ? URL.createObjectURL(next.photoBlob) : null)
-        }}
       />
     </div>
   )

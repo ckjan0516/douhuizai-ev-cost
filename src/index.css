@@ -638,20 +638,6 @@ button.stat.is-openable:focus-visible {
   text-decoration: none;
 }
 
-.ocr-raw pre {
-  white-space: pre-wrap;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.receipt-preview {
-  width: 100%;
-  max-height: 240px;
-  object-fit: contain;
-  background: #000;
-  border-radius: 4px;
-}
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -668,18 +654,6 @@ button.stat.is-openable:focus-visible {
   background: var(--panel);
   border: 1px solid var(--cable);
   clip-path: var(--cut);
-}
-
-.scan-meter {
-  height: 4px;
-  margin: 16px 0 10px;
-  background: var(--raised);
-}
-
-.scan-meter span {
-  display: block;
-  height: 100%;
-  background: var(--amber);
 }
 
 .steps {

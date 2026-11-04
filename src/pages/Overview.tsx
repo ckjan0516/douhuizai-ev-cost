@@ -434,7 +434,7 @@ export function OverviewPage() {
         </div>
         {recent.length === 0 ? (
           <p className="empty">
-            還沒有充電紀錄。到充電頁手打一筆，或掃描充電單。
+            還沒有充電紀錄。到充電頁手打一筆。
           </p>
         ) : (
           <ul className="timeline">
