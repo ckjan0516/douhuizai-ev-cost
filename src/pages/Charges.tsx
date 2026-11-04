@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { ChargeForm, emptyDraft } from '../components/ChargeForm'
 import { ScanDialog } from '../components/ScanDialog'
 import { useLedger } from '../hooks/useLedger'
-import { chargeLegs } from '../lib/calc'
+import { chargeLegs, describeEvoasisRate, evoasisRateMatch } from '../lib/calc'
 import { formatDateTime, kwh, money, providerLabel, toDateTimeLocal, twd } from '../lib/format'
 import { normalizeProvider, type ChargeDraft, type ChargeSession } from '../types'
 
@@ -92,7 +92,9 @@ export function ChargesPage() {
         <p className="empty">還沒有充電紀錄。先手打度數、金額和里程。</p>
       ) : (
         <ul className="timeline">
-          {grouped.map((charge) => (
+          {grouped.map((charge) => {
+            const match = evoasisRateMatch(charge)
+            return (
             <li key={charge.id}>
               <button type="button" className="timeline-main" onClick={() => openEdit(charge)}>
                 <div>
@@ -104,6 +106,11 @@ export function ChargesPage() {
                     {legs.get(charge.id)
                       ? ` · 這趟 ${twd(legs.get(charge.id)!.km)} km · ${money(legs.get(charge.id)!.perKm, 2)}/km`
                       : ''}
+                    {match ? (
+                      <span className={match.needsReview ? 'is-review' : undefined}>
+                        {` · ${describeEvoasisRate(match)}`}
+                      </span>
+                    ) : null}
                     {charge.source === 'ocr' ? ' · 掃描' : ''}
                   </p>
                 </div>
@@ -120,7 +127,8 @@ export function ChargesPage() {
                 刪
               </button>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
 

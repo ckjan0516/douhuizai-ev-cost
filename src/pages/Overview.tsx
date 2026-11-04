@@ -15,6 +15,9 @@ import {
   chargingHabits,
   chargeLegs,
   averageUnitPrice,
+  describeEvoasisRate,
+  evoasisRateMatch,
+  evoasisRateReport,
   fixedBreakdown,
   monthsInRange,
   monthlyAmortization,
@@ -106,6 +109,8 @@ export function OverviewPage() {
   const brands = providerShares(detailData.chargeLines)
   const habits = chargingHabits(detailData.chargeLines)
   const legs = chargeLegs(charges)
+  const evoasis = evoasisRateReport(detailData.chargeLines, legs)
+  const evoasisKwh = evoasis.buckets.reduce((sum, row) => sum + row.kWh, 0)
   const brandCost = brands.reduce((sum, row) => sum + row.cost, 0)
   const habitKwh = habits.bands.reduce((sum, row) => sum + row.kWh, 0)
 
@@ -273,7 +278,7 @@ export function OverviewPage() {
               <article className="stat">
                 <p className="stat-label">平均電價</p>
                 <p className="stat-value">{unitPrice == null ? '—' : money(unitPrice, 2)}</p>
-                <p className="stat-hint">花費 ÷ 度數</p>
+                <p className="stat-hint">實際花費 ÷ 度數。EVOASIS 另按費率拆開</p>
               </article>
               <article className="stat">
                 <p className="stat-label">每度公里</p>
@@ -281,6 +286,60 @@ export function OverviewPage() {
                 <p className="stat-hint">{kmPerKwh == null ? '充電時記下里程表' : '公里 / 度'}</p>
               </article>
             </div>
+
+            {evoasis.buckets.some((row) => row.count > 0) || evoasis.reviews.length > 0 ? (
+              <div className="report-block">
+                <h4>EVOASIS 費率</h4>
+                <p className="fine">
+                  金額 ÷ 度數，靠近 5.31 為夜貓、靠近 5.85 為離峰。每公里電費按費率分開算。
+                </p>
+                <ul className="share-list">
+                  {evoasis.buckets.map((row) => {
+                    const share = evoasisKwh > 0 ? (row.kWh / evoasisKwh) * 100 : 0
+                    return (
+                      <li key={row.id}>
+                        <div className="share-top">
+                          <span>
+                            {row.label} {row.rate.toFixed(2)}
+                          </span>
+                          <span>{Math.round(share)}%</span>
+                        </div>
+                        <div className="share-meter" aria-hidden="true">
+                          <span style={{ width: `${share}%` }} />
+                        </div>
+                        <p className="row-meta">
+                          {row.count} 筆 · {kwh(row.kWh)} · {money(row.cost)}
+                          {row.perKm == null ? ' · 尚缺里程' : ` · 每公里電費 ${money(row.perKm, 2)}`}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+                {evoasis.reviews.length > 0 ? (
+                  <>
+                    <h4 className="is-review">待確認</h4>
+                    <ul className="timeline">
+                      {evoasis.reviews.map(({ charge, match }) => (
+                        <li key={charge.id}>
+                          <div>
+                            <p className="row-title">{describeEvoasisRate(match)}</p>
+                            <p className="row-meta">
+                              {formatDateTime(charge.chargedAt)}
+                              {charge.location ? ` · ${charge.location}` : ''}
+                            </p>
+                          </div>
+                          <div className="row-end">
+                            <p>{money(charge.costTwd)}</p>
+                            <p className="row-meta">{kwh(charge.kWh)}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="fine">這些差額明顯，先不要混進夜貓或離峰。到充電頁打開該筆核對後再存。</p>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="report-block">
               <h4>品牌花費</h4>
@@ -379,21 +438,29 @@ export function OverviewPage() {
           </p>
         ) : (
           <ul className="timeline">
-            {recent.map((charge) => (
-              <li key={charge.id}>
-                <div>
-                  <p className="row-title">{providerLabel(charge.provider)}</p>
-                  <p className="row-meta">
-                    {formatDateTime(charge.chargedAt)}
-                    {charge.location ? ` · ${charge.location}` : ''}
-                  </p>
-                </div>
-                <div className="row-end">
-                  <p>{money(charge.costTwd)}</p>
-                  <p className="row-meta">{kwh(charge.kWh)}</p>
-                </div>
-              </li>
-            ))}
+            {recent.map((charge) => {
+              const match = evoasisRateMatch(charge)
+              return (
+                <li key={charge.id}>
+                  <div>
+                    <p className="row-title">{providerLabel(charge.provider)}</p>
+                    <p className="row-meta">
+                      {formatDateTime(charge.chargedAt)}
+                      {charge.location ? ` · ${charge.location}` : ''}
+                      {match ? (
+                        <span className={match.needsReview ? 'is-review' : undefined}>
+                          {` · ${describeEvoasisRate(match)}`}
+                        </span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <div className="row-end">
+                    <p>{money(charge.costTwd)}</p>
+                    <p className="row-meta">{kwh(charge.kWh)}</p>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
@@ -499,25 +566,33 @@ export function OverviewPage() {
           <p className="empty">這段期間還沒有充電紀錄。</p>
         ) : (
           <ul className="timeline">
-            {detailData.chargeLines.map((charge) => (
-              <li key={charge.id}>
-                <div>
-                  <p className="row-title">{providerLabel(charge.provider)}</p>
-                  <p className="row-meta">
-                    {formatDateTime(charge.chargedAt)}
-                    {charge.location ? ` · ${charge.location}` : ''}
-                    {charge.odometerKm != null ? ` · ${charge.odometerKm} km` : ''}
-                    {legs.get(charge.id)
-                      ? ` · 這趟 ${twd(legs.get(charge.id)!.km, 0)} km · ${money(legs.get(charge.id)!.perKm, 2)}/km`
-                      : ''}
-                  </p>
-                </div>
-                <div className="row-end">
-                  <p>{money(charge.costTwd)}</p>
-                  <p className="row-meta">{kwh(charge.kWh)}</p>
-                </div>
-              </li>
-            ))}
+            {detailData.chargeLines.map((charge) => {
+              const match = evoasisRateMatch(charge)
+              return (
+                <li key={charge.id}>
+                  <div>
+                    <p className="row-title">{providerLabel(charge.provider)}</p>
+                    <p className="row-meta">
+                      {formatDateTime(charge.chargedAt)}
+                      {charge.location ? ` · ${charge.location}` : ''}
+                      {charge.odometerKm != null ? ` · ${charge.odometerKm} km` : ''}
+                      {legs.get(charge.id)
+                        ? ` · 這趟 ${twd(legs.get(charge.id)!.km, 0)} km · ${money(legs.get(charge.id)!.perKm, 2)}/km`
+                        : ''}
+                      {match ? (
+                        <span className={match.needsReview ? 'is-review' : undefined}>
+                          {` · ${describeEvoasisRate(match)}`}
+                        </span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <div className="row-end">
+                    <p>{money(charge.costTwd)}</p>
+                    <p className="row-meta">{kwh(charge.kWh)}</p>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </BreakdownDialog>

@@ -9,7 +9,7 @@ import {
   type Vehicle,
 } from '../types'
 import { fromDateTimeLocal, parseNumber } from '../lib/format'
-import { homeChargeAmount } from '../lib/calc'
+import { describeEvoasisRate, evoasisRateMatch, homeChargeAmount } from '../lib/calc'
 import { nowDateTimeLocal, uid } from '../lib/ids'
 
 interface ChargeFormProps {
@@ -50,6 +50,14 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
     if (draft.provider !== 'home' || kWh == null) return null
     return homeChargeAmount(kWh, vehicle.electricityRateHome)
   }, [draft.kWh, draft.provider, vehicle.electricityRateHome])
+
+  const evoasisPreview = useMemo(() => {
+    if (draft.provider !== 'evoasis') return null
+    const kWh = parseNumber(draft.kWh)
+    const cost = parseNumber(draft.costTwd)
+    if (kWh == null || cost == null || kWh <= 0) return null
+    return evoasisRateMatch({ provider: 'evoasis', kWh, costTwd: cost })
+  }, [draft.provider, draft.kWh, draft.costTwd])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -160,6 +168,13 @@ export function ChargeForm({ vehicle, initial, editing, onCancel, onSave }: Char
           <summary>辨識原文</summary>
           <pre>{draft.ocrRawText}</pre>
         </details>
+      ) : null}
+      {evoasisPreview ? (
+        <p className={evoasisPreview.needsReview ? 'alert' : 'fine'}>
+          {evoasisPreview.needsReview
+            ? `${describeEvoasisRate(evoasisPreview)}。請核對金額和度數，這筆先不計入夜貓或離峰的每公里電費。`
+            : `這筆歸在${describeEvoasisRate(evoasisPreview)}。`}
+        </p>
       ) : null}
       {message ? <p className="alert">{message}</p> : null}
       <div className="actions">

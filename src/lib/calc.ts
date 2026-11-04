@@ -1,8 +1,9 @@
-import type {
-  ChargeSession,
-  FixedExpense,
-  PeriodKey,
-  Vehicle,
+import {
+  normalizeProvider,
+  type ChargeSession,
+  type FixedExpense,
+  type PeriodKey,
+  type Vehicle,
 } from '../types'
 
 export interface MonthKey {
@@ -186,6 +187,116 @@ export function averageUnitPrice(charges: ChargeSession[]): number | null {
   if (charged <= 0) return null
   const cost = charges.reduce((sum, charge) => sum + charge.costTwd, 0)
   return cost / charged
+}
+
+export const EVOASIS_RATES = [
+  { id: 'night', label: '夜貓', rate: 5.31 },
+  { id: 'offpeak', label: '離峰', rate: 5.85 },
+] as const
+
+export const EVOASIS_RATE_TOLERANCE = 0.15
+
+export type EvoasisRateId = (typeof EVOASIS_RATES)[number]['id']
+
+export interface EvoasisRateMatch {
+  unitPrice: number | null
+  rateId: EvoasisRateId | null
+  label: string
+  rate: number | null
+  needsReview: boolean
+}
+
+export function evoasisRateMatch(
+  charge: Pick<ChargeSession, 'provider' | 'kWh' | 'costTwd'>,
+): EvoasisRateMatch | null {
+  if (normalizeProvider(charge.provider) !== 'evoasis') return null
+  if (!(charge.kWh > 0)) {
+    return { unitPrice: null, rateId: null, label: '待確認', rate: null, needsReview: true }
+  }
+  const unitPrice = charge.costTwd / charge.kWh
+  let nearest: (typeof EVOASIS_RATES)[number] = EVOASIS_RATES[0]
+  let distance = Math.abs(unitPrice - nearest.rate)
+  for (const candidate of EVOASIS_RATES) {
+    const gap = Math.abs(unitPrice - candidate.rate)
+    if (gap < distance) {
+      nearest = candidate
+      distance = gap
+    }
+  }
+  const roundingSlack = Math.min(0.27, 0.5 / charge.kWh)
+  const needsReview = distance > Math.max(EVOASIS_RATE_TOLERANCE, roundingSlack)
+  return {
+    unitPrice,
+    rateId: nearest.id,
+    label: nearest.label,
+    rate: nearest.rate,
+    needsReview,
+  }
+}
+
+export function describeEvoasisRate(match: EvoasisRateMatch): string {
+  if (match.needsReview) {
+    if (match.unitPrice == null || match.rate == null) return '待確認'
+    return `待確認 ${match.unitPrice.toFixed(2)} 元/度，最接近${match.label} ${match.rate.toFixed(2)}`
+  }
+  return `${match.label} ${match.rate?.toFixed(2)}`
+}
+
+export interface EvoasisRateBucket {
+  id: EvoasisRateId
+  label: string
+  rate: number
+  count: number
+  kWh: number
+  cost: number
+  km: number
+  perKm: number | null
+}
+
+export interface EvoasisRateReview {
+  charge: ChargeSession
+  match: EvoasisRateMatch
+}
+
+export function evoasisRateReport(
+  charges: ChargeSession[],
+  legs: Map<string, ChargeLeg>,
+): { buckets: EvoasisRateBucket[]; reviews: EvoasisRateReview[] } {
+  const buckets: EvoasisRateBucket[] = EVOASIS_RATES.map((rate) => ({
+    id: rate.id,
+    label: rate.label,
+    rate: rate.rate,
+    count: 0,
+    kWh: 0,
+    cost: 0,
+    km: 0,
+    perKm: null,
+  }))
+  const legCost = new Map<EvoasisRateId, number>()
+  const reviews: EvoasisRateReview[] = []
+  for (const charge of charges) {
+    const match = evoasisRateMatch(charge)
+    if (!match) continue
+    if (match.needsReview || !match.rateId) {
+      reviews.push({ charge, match })
+      continue
+    }
+    const bucket = buckets.find((row) => row.id === match.rateId)
+    if (!bucket) continue
+    bucket.count += 1
+    bucket.kWh += charge.kWh
+    bucket.cost += charge.costTwd
+    const leg = legs.get(charge.id)
+    if (leg) {
+      bucket.km += leg.km
+      legCost.set(match.rateId, (legCost.get(match.rateId) ?? 0) + charge.costTwd)
+    }
+  }
+  for (const bucket of buckets) {
+    const cost = legCost.get(bucket.id) ?? 0
+    bucket.perKm = bucket.km > 0 ? cost / bucket.km : null
+  }
+  return { buckets, reviews }
 }
 
 export function providerShares(charges: ChargeSession[]): ProviderShare[] {

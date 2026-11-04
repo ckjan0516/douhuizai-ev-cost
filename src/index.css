@@ -422,6 +422,15 @@ button.stat.is-openable:focus-visible {
   font-size: 14px;
 }
 
+.report-block h4.is-review,
+.is-review {
+  color: var(--danger);
+}
+
+.report-block h4.is-review {
+  margin-top: 16px;
+}
+
 .share-list {
   list-style: none;
   padding: 0;
