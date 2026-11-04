@@ -384,8 +384,16 @@ export interface ChargeTrendPoint {
   at: string
   label: string
   value: number
+  weight: number
   outlier: boolean
   reason: string
+}
+
+export function chargeTrendAverage(points: ChargeTrendPoint[], includeOutliers: boolean): number | null {
+  const used = includeOutliers ? points : points.filter((point) => !point.outlier)
+  const weight = used.reduce((sum, point) => sum + point.weight, 0)
+  if (!(weight > 0)) return null
+  return used.reduce((sum, point) => sum + point.value * point.weight, 0) / weight
 }
 
 function quartile(sorted: number[], portion: number): number {
@@ -436,6 +444,7 @@ export function chargeTrend(
         at: charge.chargedAt,
         label: trendLabel(charge.chargedAt),
         value: charge.costTwd / charge.kWh,
+        weight: charge.kWh,
         tariffOff: evoasisRateMatch(charge)?.needsReview ?? false,
       })
       continue
@@ -447,6 +456,7 @@ export function chargeTrend(
       at: charge.chargedAt,
       label: trendLabel(charge.chargedAt),
       value: metric === 'perKm' ? leg.perKm : leg.whPerKm,
+      weight: leg.km,
       tariffOff: false,
     })
   }
@@ -460,6 +470,7 @@ export function chargeTrend(
       at: point.at,
       label: point.label,
       value: point.value,
+      weight: point.weight,
       outlier,
       reason,
     }

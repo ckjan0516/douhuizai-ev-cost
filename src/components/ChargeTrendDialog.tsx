@@ -3,6 +3,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import {
   CHARGE_TREND_METRICS,
   chargeTrend,
+  chargeTrendAverage,
   type ChargeLeg,
   type ChargeTrendMetric,
   type ChargeTrendPoint,
@@ -29,9 +30,16 @@ function TrendDot(props: { cx?: number; cy?: number; payload?: ChargeTrendPoint 
 
 export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }: ChargeTrendDialogProps) {
   const [metric, setMetric] = useState<ChargeTrendMetric>('unit')
+  const [includeOutliers, setIncludeOutliers] = useState(false)
   const metricMeta = CHARGE_TREND_METRICS.find((item) => item.id === metric) ?? CHARGE_TREND_METRICS[0]
   const points = useMemo(() => chargeTrend(charges, legs, metric), [charges, legs, metric])
+  const average = useMemo(
+    () => chargeTrendAverage(points, includeOutliers),
+    [points, includeOutliers],
+  )
+  const counted = includeOutliers ? points.length : points.filter((point) => !point.outlier).length
   const outliers = points.filter((point) => point.outlier)
+  const chartPoints = points.map((point) => ({ ...point, average }))
   const byId = useMemo(() => new Map(charges.map((charge) => [charge.id, charge])), [charges])
 
   return (
@@ -54,6 +62,37 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
           </button>
         ))}
       </div>
+      <div className="trend-average">
+        <p className="stat-label">平均</p>
+        <p className="stat-value ion">
+          {average == null
+            ? '—'
+            : metric === 'perKm'
+              ? money(average, 2)
+              : twd(average, metric === 'unit' ? 2 : 0)}
+        </p>
+      </div>
+      <p className="fine">
+        {average == null
+          ? '沒有可計算的一般紀錄。'
+          : `${includeOutliers ? '含離群值' : '不含離群值'} · ${counted} 筆 · ${metric === 'unit' ? '依度數加權' : '依里程加權'} · ${metricMeta.unit}`}
+      </p>
+      <div className="mini-actions trend-toggle">
+        <button
+          type="button"
+          className={includeOutliers ? 'chip' : 'chip is-on'}
+          onClick={() => setIncludeOutliers(false)}
+        >
+          不含離群值
+        </button>
+        <button
+          type="button"
+          className={includeOutliers ? 'chip is-on' : 'chip'}
+          onClick={() => setIncludeOutliers(true)}
+        >
+          含離群值
+        </button>
+      </div>
       {points.length < 2 ? (
         <p className="empty">
           {metric === 'unit'
@@ -63,7 +102,7 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
       ) : (
         <div className="chart-wrap">
           <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={points} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+            <LineChart data={chartPoints} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="rgba(92, 225, 255, 0.08)" vertical={false} />
               <XAxis
                 dataKey="label"
@@ -83,7 +122,8 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
                 cursor={{ stroke: 'rgba(92, 225, 255, 0.35)' }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
-                  const point = payload[0].payload as ChargeTrendPoint
+                  const row = payload.find((item) => item.dataKey === 'value') ?? payload[0]
+                  const point = row.payload as ChargeTrendPoint
                   const charge = byId.get(point.id)
                   return (
                     <div className="chart-tip">
@@ -97,6 +137,18 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
                   )
                 }}
               />
+              {average != null ? (
+                <Line
+                  type="monotone"
+                  dataKey="average"
+                  stroke="#7dffe1"
+                  strokeDasharray="4 4"
+                  strokeWidth={1.5}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                />
+              ) : null}
               <Line
                 type="monotone"
                 dataKey="value"
@@ -111,6 +163,10 @@ export function ChargeTrendDialog({ open, charges, legs, onClose, onOpenCharge }
         </div>
       )}
       <p className="trend-legend">
+        <span>
+          <i className="is-mean" />
+          平均
+        </span>
         <span>
           <i />
           一般

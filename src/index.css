@@ -552,6 +552,30 @@ button.stat.is-openable:focus-visible {
   background: var(--danger);
 }
 
+.trend-legend i.is-mean {
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed var(--ion);
+  background: transparent;
+  vertical-align: 3px;
+}
+
+.trend-average {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.trend-average .stat-value {
+  margin-top: 0;
+}
+
+.trend-toggle {
+  margin-top: 8px;
+}
+
 .row-end {
   text-align: right;
   font-family: var(--mono);
