@@ -54,7 +54,7 @@ export function ChargesPage() {
         <h2>每一次補能</h2>
       </section>
 
-      <div className="actions">
+        <div className={mode === 'idle' ? 'actions dock-actions' : 'actions'}>
         <button type="button" className="btn primary" onClick={openManual}>
           手打一筆
         </button>
